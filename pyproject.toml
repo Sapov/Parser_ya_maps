@@ -5,4 +5,5 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[all]>=0.135.2",
+    "uvicorn>=0.42.0",
 ]
