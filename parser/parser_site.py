@@ -7,16 +7,10 @@ import asyncio
 from bs4 import BeautifulSoup as bs
 
 
-def run(lst:list):
-    start = time.time()
-
-    asyncio.run(ParseSite(lst).main())
-    print('Время выполнения: ', time.time() - start)
 
 
 class ParseSite:
     def __init__(self, list_link_site:list):
-
         self.list_link_site = list_link_site
 
     async def get_page(self, site: str) -> dict:
@@ -35,10 +29,10 @@ class ParseSite:
                             item["telegram"] = self.search_telega(page)
 
                         return item
-                    except:
-                        print("Нет данных")
-            except:
-                print("Сайт не ответил")
+                    except Exception as e:
+                        print(f'Нет данных" {e}')
+            except Exception as e:
+                print(f"Сайт не ответил {e}")
 
     def search_mail(self, page):
         soup = bs(page, "lxml")
@@ -52,7 +46,6 @@ class ParseSite:
         to_mail = self.search_mail_in_text(soup.text)
         emails.add(to_mail)
         print("Почта со страницы", emails)
-
         print("=" * 30)
         return list(emails) if len(emails) != 0 else []
 
@@ -79,11 +72,27 @@ class ParseSite:
         return lst
 
     async def main(self):
-        requests = [self.get_page(i['site']) for i in self.list_link_site if i['site'] !='']
+        requests = [self.get_page(i.site) for i in self.list_link_site if i.site !='']
         print(requests)
         lst = await asyncio.gather(*requests)
         print(lst)
+        self.save_data(lst)
         return lst
 
     def add_in_base(self):
         pass
+
+
+    def get_list_site_address(self):
+        pass
+
+    def save_data(self, new_list: list):
+        with open(f"mail.json", "w", encoding="utf-8") as file:
+            json.dump(new_list, file, ensure_ascii=False, indent=4)
+
+
+def run(lst:list):
+    start = time.time()
+
+    asyncio.run(ParseSite(lst).main())
+    print('Время выполнения: ', time.time() - start)
