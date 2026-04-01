@@ -20,6 +20,7 @@ class DB:
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
 
+
     def add_items_link(self, items_link: dict) -> None:
         session = self.Session()
         try:
@@ -84,6 +85,7 @@ class DB:
             raise  # Переподнимаем исключение для диагностики
         finally:
             session.close()
+
     def get_all_links(self) -> list[Organisations]:
         """Получить все записи из таблицы"""
         session = self.Session()

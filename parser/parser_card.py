@@ -20,7 +20,7 @@ class ParserCard:
         self.category = category
         self.driver = None
 
-    def __setup_selenium(self):
+    def setup_selenium(self):
         options = Options()
         options.add_argument("--headless=new")
         return options
@@ -28,13 +28,14 @@ class ParserCard:
     def __create_full_url(self):
         return f"{self.URL}{self.category} {self.location}"
 
-    def __create_web_driver(self):
+    def create_web_driver(self):
         self.driver = uc.Chrome(
-            version_main=self.VERSION_CHROME, options=self.__setup_selenium()
+            version_main=self.VERSION_CHROME, options=self.setup_selenium()
         )
-        self.driver.get(self.__create_full_url())
 
     def __parse_block_page(self):
+        self.driver.get(self.__create_full_url())
+
         """Получаем блоки элементов"""
         preview_count = elements = count = 0
         logger.info(f"[INFO] --Парсим блоки выдачи в яндекс картах--")
@@ -105,8 +106,8 @@ class ParserCard:
 
     def run(self):
 
-        self.__setup_selenium()
-        self.__create_web_driver()
+        self.setup_selenium()
+        self.create_web_driver()
         time.sleep(5)
         print(self.__parse_block_page())
 
