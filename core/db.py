@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DB:
     def __init__(self):
         self.engine = create_engine(
-            "sqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3",
+            url=settings.db_url,
             echo=settings.db_echo,
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
@@ -222,6 +222,6 @@ class DB:
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    itm = {'link': 'https://yandex.ru/maps/org/prints/1659610427/', 'title': 'Принц', 'rating_yandex': '4,9',
+    itm = {'link': 'https://yandex.ru/maps/org/prints/1659610427/', 'title': 'Принц', 'rating_yandex': '5,0',
            'estimation': None, 'city': 'Воронеж', 'category': 'Бассейны'}
     db.add_items_link(itm)
