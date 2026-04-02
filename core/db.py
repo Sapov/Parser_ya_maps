@@ -217,7 +217,6 @@ class DB:
                         "phone": i.phone,
                         "address": i.address,
                         "site": i.site,
-                        # "category": i.category,  # "mail":i.mail,
                     }
                 )
             return lst

@@ -1,6 +1,8 @@
 import json
 import re
 import time
+from typing import Optional
+
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup as bs
@@ -10,24 +12,23 @@ from core.db import DB
 
 
 class ParseSite:
-    def __init__(self, list_link_site:list):
+    def __init__(self, list_link_site: list):
         self.list_link_site = list_link_site
 
     async def get_page(self, itemd: dict) -> dict:
         async with aiohttp.ClientSession() as session:
-            print(itemd)
             try:
                 url = f"http://{itemd['site']}"
-                item= {} | itemd
+                item = {} | itemd
                 async with session.get(url, ssl=False) as result:
                     try:
                         if result.status == 200:
                             page = await result.text()
-                            print(f"Почта со страницы {url}")
+                            print(f"---- Обработка страницы: {url} ----")
                             item["mail"] = self.search_mail(page)
                             item["whatsapp"] = self.search_wa_me(page)
                             item["telegram"] = self.search_telega(page)
-                            itm= AsyncDB()
+                            itm = AsyncDB()
                             await itm.insert_data(item)
                         return item
                     except Exception as e:
@@ -39,16 +40,16 @@ class ParseSite:
         soup = bs(page, "lxml")
         emails = set()
         for index, link in enumerate(
-            soup.find_all("a", attrs={"href": re.compile("^mailto:")})
+                soup.find_all("a", attrs={"href": re.compile("^mailto:")})
         ):
             # Достаём email-адреса из тегов с mailto
             email = link.get("href").replace("mailto:", "")
             emails.add(email)
         to_mail = self.search_mail_in_text(soup.text)
         emails.add(to_mail)
-        print("Почта со страницы", emails)
+        print("Нашлись адреса почты:", emails)
         print("=" * 30)
-        return ' '.join(list(emails)) if len(emails) != 0 else ''
+        return ', '.join(list(emails)) if len(emails) != 0 else ''
 
     def search_mail_in_text(self, text):
         mail = re.compile(r"[a-zA-Z0-9._%+-]+@+[a-zA-Z0-9._%+-]+(\.[a-zA-Z]{2,4})")
@@ -73,31 +74,19 @@ class ParseSite:
         return ' '.join(lst)
 
     async def main(self):
-        requests = [self.get_page(i) for i in self.list_link_site if i['site'] !='']
+        start = time.time()
+
+        requests = [self.get_page(i) for i in self.list_link_site if i['site'] != '']
         lst = await asyncio.gather(*requests)
-        print(lst)
+        print('Время выполнения: ', time.time() - start)
+
         return lst
 
-    def add_in_base(self):
-        pass
-
-
-    def get_list_site_address(self):
-        pass
 
 def save_data(new_list: list):
     with open(f"mail.json", "w", encoding="utf-8") as file:
         json.dump(new_list, file, ensure_ascii=False, indent=4)
 
-
-def run(lst:list):
-    start = time.time()
-
-    lst = asyncio.run(ParseSite(lst).main())
-
-    # item.update_record(lst)
-
-    print('Время выполнения: ', time.time() - start)
 
 if __name__ == '__main__':
     item = DB()

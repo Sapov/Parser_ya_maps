@@ -1,3 +1,4 @@
+import asyncio
 import json
 import math
 import time
@@ -7,6 +8,8 @@ from parser.parser_card import ParserCard
 from core.db import DB
 from selenium.webdriver.common.by import By
 import logging
+
+from parser.parser_site import ParseSite, save_data
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +105,7 @@ class ParserPage(ParserCard):
                 logging.warning(f"Сcылка не открылась")
 
             logger.info(f"NOMBER {index} {items} \n ")
-            print("*" * 50)
+            print(f"*" * 50 , f'открываю страницу {val["link"]}')
             # Обновляем базу
             db = DB()
             db.update_record(items)
@@ -121,6 +124,10 @@ class ParserPage(ParserCard):
 
     def run(self) -> None:
         self.get_data_set(10)
+        item = DB()
+        lst_old = item.get_all_sites()
+        lst = asyncio.run(ParseSite(lst_old).main())
+        save_data(lst)
 
 
 if __name__ == "__main__":

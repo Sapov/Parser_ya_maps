@@ -1,18 +1,28 @@
-from fastapi import APIRouter
-from .parser_card import ParserCard
-
-router = APIRouter(prefix='/parser', tags=['parser'])
-
-
-@router.get('/')
-def hello():
-    return 'HE'
-
-
-@router.post('/run/')
-def run_parser(category: str, city: str, quantity:int):
-    search = ParserCard(category, city, quantity)
-    search.run()
-    # ParserPage().run()
-
-    return 'wait'
+# import asyncio
+#
+# from fastapi import APIRouter
+#
+# from core.db import DB
+# from .parser_card import ParserCard
+# from .parser_site import ParseSite, save_data
+# from .parser_ya_page import ParserPage
+#
+# router = APIRouter(prefix='/parser', tags=['parser'])
+#
+#
+# @router.get('/')
+# def hello():
+#     return 'HE'
+#
+#
+# @router.post('/run/')
+# def run_parser(category: str, city: str, quantity:int):
+#     search = ParserCard(category, city, quantity)
+#     search.run()
+#     ParserPage().run()
+#     item = DB()
+#     lst_old = item.get_all_sites()
+#     lst = asyncio.run(ParseSite(lst_old).main())
+#     save_data(lst)
+#
+#     return 'wait'
