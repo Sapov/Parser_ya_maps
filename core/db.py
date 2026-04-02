@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, select
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from parser.models import Base
 from parser.models.organisations import Organisations
@@ -19,6 +20,26 @@ class DB:
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
+        self.async_session = create_async_engine("sqlite+aiosqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3")
+        self.async_session = async_sessionmaker()
+
+
+    async def insert_data(self, item: dict):
+        async with self.async_session() as session:
+            result = await session.execute(
+                select(Organisations).where(Organisations.id == item.get("id"))
+            )
+            entry = result.scalar_one_or_none()
+
+            if entry:
+                entry.mail = item.get("mail")
+                entry.whatsapp = item.get("whatsapp")
+                entry.telegram = item.get("telegram")
+                logger.info(f"Обновлена организация с ID: {entry.id}")
+
+                await session.commit()
+            else:
+                logger.warning(f"Организация с ID {item.get('id')} не найдена")
 
 
     def add_items_link(self, items_link: dict) -> None:

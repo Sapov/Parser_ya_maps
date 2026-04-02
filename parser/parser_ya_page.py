@@ -1,3 +1,4 @@
+import json
 import math
 import time
 import random
@@ -22,6 +23,7 @@ class ParserPage(ParserCard):
 
     def __init__(self):
         # super().__init__()
+        self.list_elements = []
         self.link_list_items = []
 
     def get_data_set(self, number_of_entries: int):
@@ -104,8 +106,18 @@ class ParserPage(ParserCard):
             # Обновляем базу
             db = DB()
             db.update_record(items)
+
+            self.list_elements.append(items)
+        self.save_data(self.list_elements)
+
         self.driver.close()
         self.driver.quit()
+
+
+
+    def save_data(self, new_list: list):
+        with open(f"mail.json", "w", encoding="utf-8") as file:
+            json.dump(new_list, file, ensure_ascii=False, indent=4)
 
     def run(self) -> None:
         self.get_data_set(10)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from .parser_card import ParserCard
+
 router = APIRouter(prefix='/parser', tags=['parser'])
 
 
@@ -12,4 +13,6 @@ def hello():
 def run_parser(category: str, city: str, quantity:int):
     search = ParserCard(category, city, quantity)
     search.run()
+    # ParserPage().run()
+
     return 'wait'

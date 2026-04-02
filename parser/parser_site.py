@@ -1,24 +1,24 @@
 import json
 import re
 import time
-
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup as bs
 
-
+from core.adb import AsyncDB
+from core.db import DB
 
 
 class ParseSite:
     def __init__(self, list_link_site:list):
         self.list_link_site = list_link_site
 
-    async def get_page(self, site: str) -> dict:
+    async def get_page(self, itemd: dict) -> dict:
         async with aiohttp.ClientSession() as session:
-            print(site)
+            print(itemd)
             try:
-                url = f"http://{site}"
-                item= {}
+                url = f"http://{itemd['site']}"
+                item= {} | itemd
                 async with session.get(url, ssl=False) as result:
                     try:
                         if result.status == 200:
@@ -27,7 +27,8 @@ class ParseSite:
                             item["mail"] = self.search_mail(page)
                             item["whatsapp"] = self.search_wa_me(page)
                             item["telegram"] = self.search_telega(page)
-
+                            itm= AsyncDB()
+                            await itm.insert_data(item)
                         return item
                     except Exception as e:
                         print(f'Нет данных" {e}')
@@ -47,7 +48,7 @@ class ParseSite:
         emails.add(to_mail)
         print("Почта со страницы", emails)
         print("=" * 30)
-        return list(emails) if len(emails) != 0 else []
+        return ' '.join(list(emails)) if len(emails) != 0 else ''
 
     def search_mail_in_text(self, text):
         mail = re.compile(r"[a-zA-Z0-9._%+-]+@+[a-zA-Z0-9._%+-]+(\.[a-zA-Z]{2,4})")
@@ -62,21 +63,19 @@ class ParseSite:
         mo1 = whatsapp_2.findall(page)
         lst = list(set(mo + mo1))
         print("НОМЕР WHATSSAPP", lst)
-        return lst
+        return ' '.join(lst)
 
     def search_telega(self, page):
         telega = re.compile(r"https:\/\/t.me\/\w+")
         mo = telega.findall(page)
         lst = list(set(mo))
         print("НОМЕР TETELGRAMM", lst, "\n")
-        return lst
+        return ' '.join(lst)
 
     async def main(self):
-        requests = [self.get_page(i.site) for i in self.list_link_site if i.site !='']
-        print(requests)
+        requests = [self.get_page(i) for i in self.list_link_site if i['site'] !='']
         lst = await asyncio.gather(*requests)
         print(lst)
-        self.save_data(lst)
         return lst
 
     def add_in_base(self):
@@ -86,13 +85,22 @@ class ParseSite:
     def get_list_site_address(self):
         pass
 
-    def save_data(self, new_list: list):
-        with open(f"mail.json", "w", encoding="utf-8") as file:
-            json.dump(new_list, file, ensure_ascii=False, indent=4)
+def save_data(new_list: list):
+    with open(f"mail.json", "w", encoding="utf-8") as file:
+        json.dump(new_list, file, ensure_ascii=False, indent=4)
 
 
 def run(lst:list):
     start = time.time()
 
-    asyncio.run(ParseSite(lst).main())
+    lst = asyncio.run(ParseSite(lst).main())
+
+    # item.update_record(lst)
+
     print('Время выполнения: ', time.time() - start)
+
+if __name__ == '__main__':
+    item = DB()
+    lst_old = item.get_all_sites()
+    lst = asyncio.run(ParseSite(lst_old).main())
+    save_data(lst)
