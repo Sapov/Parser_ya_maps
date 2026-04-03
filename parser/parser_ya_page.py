@@ -4,8 +4,8 @@ import math
 import time
 import random
 
-from parser.parser_card import ParserCard
 from core.db import DB
+from parser.parser_card import ParserCard
 from selenium.webdriver.common.by import By
 import logging
 
@@ -28,18 +28,19 @@ class ParserPage(ParserCard):
         # super().__init__()
         self.list_elements = []
         self.link_list_items = []
+        self.db = DB()
 
     def get_data_set(self, number_of_entries: int):
         # читаем из базы по страницам в 10 записей
         # number_of_entries = 10
-        db = DB()
-        links = db.get_all_links()
+
+        links = self.db.get_all_links()
         count = len(links)
         logger.info(f"Всего {count} записей в базе")
         count = math.ceil(count / number_of_entries)
         logger.info(f"Это {count} Страниц по {number_of_entries} записей")
         for j in range(1, count + 1):
-            set_items = db.get_links_paginated(j, number_of_entries)
+            set_items = self.db.get_links_paginated(j, number_of_entries)
             logging.info(f"[INFO] Проходим набор №  {j}")
 
             for i in set_items:
@@ -107,8 +108,7 @@ class ParserPage(ParserCard):
             logger.info(f"NOMBER {index} {items} \n ")
             print(f"*" * 50 , f'открываю страницу {val["link"]}')
             # Обновляем базу
-            db = DB()
-            db.update_record(items)
+            self.db.update_record(items)
 
             self.list_elements.append(items)
         self.save_data(self.list_elements)
@@ -124,8 +124,8 @@ class ParserPage(ParserCard):
 
     def run(self) -> None:
         self.get_data_set(10)
-        item = DB()
-        lst_old = item.get_all_sites()
+
+        lst_old = self.db.get_all_sites()
         lst = asyncio.run(ParseSite(lst_old).main())
         save_data(lst)
 

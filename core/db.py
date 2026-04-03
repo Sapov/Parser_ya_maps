@@ -19,9 +19,12 @@ class DB:
             echo=settings.db_echo,
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
+        # Base.metadata.drop_all(self.engine)
         Base.metadata.create_all(self.engine)
-        self.async_session = create_async_engine("sqlite+aiosqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3")
-        self.async_session = async_sessionmaker()
+
+        async_engine = create_async_engine("sqlite+aiosqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3")
+        self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
+
 
 
     async def insert_data(self, item: dict):

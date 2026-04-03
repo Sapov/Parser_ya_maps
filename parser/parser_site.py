@@ -73,6 +73,10 @@ class ParseSite:
         print("НОМЕР TETELGRAMM", lst, "\n")
         return ' '.join(lst)
 
+    def get_table_list(self):
+        lst_old = DB().get_all_sites()
+        return lst_old
+
     async def main(self):
         start = time.time()
 
@@ -88,8 +92,14 @@ def save_data(new_list: list):
         json.dump(new_list, file, ensure_ascii=False, indent=4)
 
 
-if __name__ == '__main__':
+def run():
+    from core.db import DB
+
     item = DB()
     lst_old = item.get_all_sites()
     lst = asyncio.run(ParseSite(lst_old).main())
-    save_data(lst)
+    return lst
+
+
+if __name__ == '__main__':
+    run()

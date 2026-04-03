@@ -1,11 +1,12 @@
 import random
 import time
-
+from core.db import DB
 import undetected_chromedriver as uc
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class ParserCard:
 
     def __parse_block_page(self):
         self.driver.get(self.__create_full_url())
+        time.sleep(4)
 
         """Получаем блоки элементов"""
         preview_count = elements = count = 0
@@ -99,7 +101,6 @@ class ParserCard:
                 "category": self.category,
             }
             print(item)
-            from core.db import DB
             db = DB()
             db.add_items_link(item)
 
@@ -109,8 +110,8 @@ class ParserCard:
         self.setup_selenium()
         self.create_web_driver()
         time.sleep(5)
-        print(self.__parse_block_page())
+        self.__parse_block_page()
 
 
 if __name__ == "__main__":
-    print(ParserCard("Бассейны", "Воронеж", 10).run())
+        print(ParserCard("Агенство недвижимости", "Воронеж", 10).run())

@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from parser import router as router_parser
+from core.config import settings
 
 app = FastAPI(title=settings.app_name)
 
