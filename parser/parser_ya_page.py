@@ -24,19 +24,21 @@ class ParserPage(ParserCard):
     2. Получаем со страницы (телефон адресс сайт)
     """
 
-    def __init__(self):
-        # super().__init__()
+    def __init__(self, category, location):
+        super().__init__(category=category, location=location, quantity=None)
         self.list_elements = []
         self.link_list_items = []
         self.db = DB()
         self.config = ParserConfig()
+        self.category = category
+        self.location = location
 
 
     def get_data_set(self, number_of_entries: int):
         # читаем из базы по страницам в 10 записей
         # number_of_entries = 10
 
-        links = self.db.get_all_links()
+        links = self.db.get_by_category_and_city(category_name=self.category, city_name=self.location)
         count = len(links)
         logger.info(f"Всего {count} записей в базе")
         print(f"Всего {count} записей в базе")
@@ -68,7 +70,6 @@ class ParserPage(ParserCard):
             try:
                 logging.info(f'Open Link {val["link"]}')
                 self.driver.get(val["link"])
-                print(f'OPEN {val["link"]}')
 
                 try:
                     items.setdefault(
@@ -134,5 +135,10 @@ class ParserPage(ParserCard):
 
 
 if __name__ == "__main__":
-    a = ParserPage()
+    # Настройка логирования
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    a = ParserPage(category='Агентство недвижимости',  location='Ялта')
     a.run()

@@ -1,3 +1,5 @@
+from unicodedata import category
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
@@ -116,6 +118,25 @@ class DB:
             stmt = select(Organisations)
             result = session.execute(stmt)
             return list(result.scalars())
+        finally:
+            session.close()
+
+    def get_by_category_and_city(self, category_name: str, city_name: str) -> list[Organisations]:
+        """Получает все организации по категории и городу"""
+        session = self.Session()
+        try:
+            # Используем join для эффективного запроса
+            stmt = select(Organisations).join(
+                Category, Organisations.category
+            ).join(
+                City, Organisations.city
+            ).where(
+                Category.category == category_name,
+                City.city == city_name
+            ).order_by(Organisations.rating_yandex.desc())
+
+            result = session.execute(stmt)
+            return list(result.scalars().all())
         finally:
             session.close()
 
@@ -286,6 +307,6 @@ class DB:
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    itm = {'link': 'https://yandex.ru/maps/org/prints/1659610427/', 'title': 'Принц', 'rating_yandex': '5,0',
-           'estimation': None, 'city': 'Воронеж', 'category': 'Бассейны'}
-    db.add_items_link(itm)
+    l= db.get_by_category_and_city(category_name='Агентство недвижимости', city_name='Воронеж')
+    print(len(l))
+    print(l)
