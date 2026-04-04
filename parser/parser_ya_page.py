@@ -5,7 +5,7 @@ import time
 import random
 
 from core.db import DB
-from parser.parser_card import ParserCard
+from parser.parser_card import ParserCard, ParserConfig
 from selenium.webdriver.common.by import By
 import logging
 
@@ -29,6 +29,8 @@ class ParserPage(ParserCard):
         self.list_elements = []
         self.link_list_items = []
         self.db = DB()
+        self.config = ParserConfig()
+
 
     def get_data_set(self, number_of_entries: int):
         # читаем из базы по страницам в 10 записей
@@ -37,6 +39,7 @@ class ParserPage(ParserCard):
         links = self.db.get_all_links()
         count = len(links)
         logger.info(f"Всего {count} записей в базе")
+        print(f"Всего {count} записей в базе")
         count = math.ceil(count / number_of_entries)
         logger.info(f"Это {count} Страниц по {number_of_entries} записей")
         for j in range(1, count + 1):
@@ -57,8 +60,7 @@ class ParserPage(ParserCard):
             self.link_list_items.clear()
 
     def __open_page(self):
-        self.setup_selenium()
-        self.create_web_driver()
+        self.setup_driver()
         """Получаем со страницы организации телефон, адрес, сайт"""
         for index, val in enumerate(self.link_list_items):
             time.sleep(random.randint(1, 5))
@@ -66,6 +68,8 @@ class ParserPage(ParserCard):
             try:
                 logging.info(f'Open Link {val["link"]}')
                 self.driver.get(val["link"])
+                print(f'OPEN {val["link"]}')
+
                 try:
                     items.setdefault(
                         "name", self.driver.find_element(By.TAG_NAME, "H1").text
