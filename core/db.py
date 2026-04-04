@@ -241,6 +241,48 @@ class DB:
                 logger.info(f"Обновлена организация с ID: {entry.id}")
             session.commit()
 
+    def add_items_batch(self, items: list[dict]) -> None:
+        """Массовая вставка элементов в БД"""
+        session = self.Session()
+        try:
+            for item in items:
+                # Получаем или создаем категорию
+                category = session.query(Category).filter_by(category=item.get("category")).first()
+                if not category:
+                    category = Category(category=item.get("category"))
+                    session.add(category)
+                    session.flush()
+
+                # Получаем или создаем город
+                city = session.query(City).filter_by(city=item.get("city")).first()
+                if not city:
+                    city = City(city=item.get("city"))
+                    session.add(city)
+                    session.flush()
+
+                # Проверяем существование организации
+                existing = session.query(Organisations).filter_by(link=item.get("link")).first()
+
+                if not existing:
+                    org = Organisations(
+                        link=item.get("link"),
+                        title=item.get("title"),
+                        rating_yandex=item.get("rating_yandex"),
+                        estimation=item.get("estimation"),
+                        category=category,
+                        city=city,
+                    )
+                    session.add(org)
+
+            session.commit()
+            logger.info(f"Массово добавлено {len(items)} организаций")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Ошибка массовой вставки: {e}")
+            raise
+        finally:
+            session.close()
+
 
 # Проверка работы
 if __name__ == "__main__":

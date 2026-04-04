@@ -12,6 +12,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +28,6 @@ class ParserConfig:
 
 
 class ParserCard:
-
     # Константы для селекторов
     SELECTORS = {
         "link": (".search-snippet-view .link-overlay", "href", True),  # обязательное поле
@@ -42,6 +42,7 @@ class ParserCard:
         self.category = category
         self.driver = None
         self.config = config or ParserConfig()
+
     def __enter__(self):
         """Контекстный менеджер для автоматического закрытия драйвера"""
         self.setup_driver()
@@ -70,19 +71,8 @@ class ParserCard:
         if self.driver:
             self.driver.quit()
 
-
-    # def setup_selenium(self):
-    #     options = Options()
-    #     options.add_argument("--headless=new")
-    #     return options
-
     def __create_full_url(self):
         return f"{self.config.url}{self.category} {self.location}"
-
-    # def create_web_driver(self):
-    #     self.driver = uc.Chrome(
-    #         version_main=self.config.version_chrome, options=self.setup_selenium()
-    #     )
 
     def __parse_block_page(self):
         self.driver.get(self.__create_full_url())
@@ -210,7 +200,6 @@ class ParserCard:
 
         return item
 
-
     def run(self):
 
         self.setup_driver()
@@ -219,4 +208,4 @@ class ParserCard:
 
 
 if __name__ == "__main__":
-        print(ParserCard("Агенство недвижимости", "Тамбов", 10).run())
+    print(ParserCard("Агенство недвижимости", "Тамбов", 10).run())
