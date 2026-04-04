@@ -158,7 +158,6 @@ class ParserCard:
         # Очистка данных
         item = self._clean_item_data(item)
 
-        print(item)
         return item
 
     def _safe_extract(self, element, selector: str, attr_type: str) -> Optional[str]:
