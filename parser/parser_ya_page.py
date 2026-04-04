@@ -39,20 +39,16 @@ class ParserPage(ParserCard):
         # number_of_entries = 10
 
         links = self.db.get_by_category_and_city(category_name=self.category, city_name=self.location)
-        print(links)
 
-        # for j in range(1, count + 1):
-        #     set_items = self.db.get_links_paginated(j, number_of_entries)
-        #     logging.info(f"[INFO] Проходим набор №  {j}")
 
         for i in links:
             self.link_list_items.append(
                 {
-                    "id": i.id,
-                    "title": i.title,
-                    "link": i.link,
-                    "rating_yandex": i.rating_yandex,
-                    "estimation": i.estimation,
+                    "id": i['id'],
+                    "title": i['title'],
+                    "link": i['link'],
+                    "rating_yandex": i['rating_yandex'],
+                    "estimation": i['estimation'],
                 }
             )
         self.__open_page()
@@ -124,10 +120,8 @@ class ParserPage(ParserCard):
             json.dump(new_list, file, ensure_ascii=False, indent=4)
 
     def run(self) -> None:
-        # self.get_data_set(10)
-
+        self.get_data_set(10)
         lst_old = self.db.get_by_category_and_city(self.category, self.location)
-        print(lst_old, type(lst_old))
         lst = asyncio.run(ParseSite(lst_old).main())
         save_data(lst)
 
@@ -138,5 +132,5 @@ if __name__ == "__main__":
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    a = ParserPage(category='Агентство недвижимости',  location='Волгоград')
+    a = ParserPage(category='Агентство недвижимости',  location='Казань')
     a.run()
