@@ -17,10 +17,10 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_track_started=True,
-    task_time_limit=30 * 60,  # 30 минут
-    task_soft_time_limit=25 * 60,  # 25 минут
+    task_time_limit=3600 * 3,  # 2 часа
+    task_soft_time_limit=3600 * 3 - 60,  # 2 часа - 60 сек
     worker_prefetch_multiplier=1,
-    result_expires=3600,  # Результаты хранятся 1 час
+    result_expires=86400,  # Результаты хранятся 24 часа
     task_acks_late=True,  # Подтверждение после выполнения
     worker_max_tasks_per_child=1000,  # Перезапуск воркера после 1000 задач
 )

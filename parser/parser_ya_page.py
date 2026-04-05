@@ -15,7 +15,7 @@ from parser.parser_card import ParserCard, ParserConfig
 from selenium.webdriver.common.by import By
 import logging
 
-from parser.parser_site import ParseSite, save_data
+from parser.parser_site import ParseSite
 
 logger = logging.getLogger(__name__)
 
@@ -364,8 +364,7 @@ class PageParser:
             )
 
             if records:
-                lst = asyncio.run(ParseSite(records).main())
-                save_data(lst)
+                asyncio.run(ParseSite(records).main())
                 logger.info("Дополнительный парсинг завершен")
             else:
                 logger.warning("Нет данных для дополнительного парсинга")

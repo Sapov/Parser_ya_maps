@@ -86,10 +86,6 @@ class ParseSite:
         return lst
 
 
-def save_data(new_list: list):
-    with open(f"mail.json", "w", encoding="utf-8") as file:
-        json.dump(new_list, file, ensure_ascii=False, indent=4)
-
 
 def run():
     from core.db import DB
