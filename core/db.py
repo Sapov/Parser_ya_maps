@@ -109,7 +109,7 @@ class DB:
             session.close()
 
     def get_all_links(self) -> list[Organisations]:
-        """Получить все записи из таблицы"""
+        """Получить все записи из таблицы Organisations"""
         session = self.Session()
         try:
             stmt = select(Organisations)
