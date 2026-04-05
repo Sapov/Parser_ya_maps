@@ -1,22 +1,10 @@
+from itertools import cycle
 
 from fastapi import APIRouter
 
-from core.tasks import search_itm
 router = APIRouter(prefix='/parser', tags=['parser'])
 
-
-
-
-# @router.post('/run/')
-# def run_parser(category: str, city: str, quantity:int):
-#     search = ParserCard(category, city, quantity)
-#     search.run()
-#     ParserPage().run()
-#     item = DB()
-#     lst_old = item.get_all_sites()
-#     lst = asyncio.run(ParseSite(lst_old).main())
-#     save_data(lst)
-#     return 'wait'
+from tasks import example_hello, add_numbers, parse
 
 
 @router.post("/api/tasks/process")
@@ -24,9 +12,37 @@ async def create_process_task(category: str, city: str, quantity:int):
     """
     Запускает задачу обработки данных
     """
-    task = search_itm.delay(category, city, quantity)
+    print('VIEW', category, city, quantity)
+    task = parse.delay(category, city, quantity)
     return {
         "task_id": task.id,
         "status": "started",
         "message": "Задача обработки запущена"
+    }
+
+
+
+# Эндпоинты для работы с задачами
+@router.post("/api/tasks/hello")
+async def create_hello_task(name):
+    """
+    Создание задачи Hello
+    """
+    task = example_hello.delay(name)
+    return {
+        "task_id": task.id,
+        "status": "pending",
+        "message": f"Задача создана для {name}"
+    }
+
+@router.post("/api/tasks/add")
+async def create_add_task(x: int, y:float):
+    """
+    Создание задачи сложения
+    """
+    task = add_numbers.delay(x, y)
+    return {
+        "task_id": task.id,
+        "status": "pending",
+        "message": f"Задача на сложение {x} + {y} создана"
     }

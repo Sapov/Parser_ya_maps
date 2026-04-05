@@ -1,11 +1,15 @@
+import logging
 import uvicorn
 from fastapi import FastAPI
-from parser import router as router_parser
+
+from parser.views import router as router_parser
 from core.config import settings
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.app_name)
 
 app.include_router(router_parser)
+
 
 
 if __name__ == '__main__':

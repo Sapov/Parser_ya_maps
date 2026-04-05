@@ -1,37 +1,23 @@
 import time
-import asyncio
 from typing import Dict, Any, List
-from celery import shared_task
 from celery_app import celery_app
 import logging
+from run_parser import run_parser
 
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="tasks.example_hello", bind=True)
-def example_hello(self, name: str) -> Dict[str, Any]:
+@celery_app.task(name="tasks.parse", bind=True)
+def parse(self, category: str, city: str, quantity: int) -> Dict[str, Any]:
     """
     Простая задача-пример
     """
-    logger.info(f"Задача {self.request.id} запущена для {name}")
-    time.sleep(2)  # Имитация работы
-    return {"message": f"Hello {name}!", "task_id": self.request.id}
+    print('TASK', category, city, quantity)
+    run_parser(category, city, quantity)
 
+    logger.info(f"Парсинг {category} запущен для города {city}")
+    return {"message": f"Парсинг {category} запущен для города {city} {self.task.id}"}
 
-@celery_app.task(name="tasks.add_numbers", bind=True)
-def add_numbers(self, x: int, y: int) -> Dict[str, Any]:
-    """
-    Задача сложения чисел
-    """
-    logger.info(f"Сложение {x} + {y}")
-    time.sleep(1)
-    result = x + y
-    return {
-        "x": x,
-        "y": y,
-        "result": result,
-        "task_id": self.request.id
-    }
 
 
 @celery_app.task(name="tasks.process_data", bind=True)

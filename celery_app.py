@@ -1,12 +1,12 @@
 from celery import Celery
-from .config import settings
+from core.config import settings
 
 # Создаем экземпляр Celery
 celery_app = Celery(
     "worker",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["core.tasks"]  # Список модулей с задачами
+    include=["tasks"]  # Список модулей с задачами
 )
 
 # Настройки Celery
