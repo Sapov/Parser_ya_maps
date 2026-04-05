@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     celery_broker_url: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
     celery_result_backend: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+
+
 class Config:
     env_file = ".env"
 

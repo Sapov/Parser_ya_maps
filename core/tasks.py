@@ -3,7 +3,7 @@ import asyncio
 from typing import Dict, Any
 from celery import shared_task
 
-from .celery_worker import celery_app
+from .celery_app import celery_app
 import logging
 
 

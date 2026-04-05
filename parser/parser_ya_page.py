@@ -416,17 +416,6 @@ class AsyncPageParser(PageParser):
         await loop.run_in_executor(None, self.run)
 
 
-# Упрощенный интерфейс для обратной совместимости
-class ParserPage(PageParser):
-    """Класс для обратной совместимости с исходным кодом"""
-
-    def __init__(self, category: str, location: str):
-        super().__init__(category=category, location=location)
-
-    def run(self) -> None:
-        super().run()
-
-
 if __name__ == "__main__":
     # Настройка логирования
     logging.basicConfig(
@@ -444,9 +433,9 @@ if __name__ == "__main__":
     )
 
     # Запуск парсера
-    parser = ParserPage(
+    parser = PageParser(
         category='Агентство недвижимости',
-        location='Судак'
+        location='Саратов'
     )
 
     try:

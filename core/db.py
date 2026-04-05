@@ -318,9 +318,15 @@ class DB:
             session.close()
 
 
+    def test_select(self):
+        with self.Session() as session:
+            stmt = select(City).where(City.id == 2)
+            result = session.execute(stmt)
+
+            print(result.one())
+
+
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    l = db.get_by_category_and_city(category_name='Агентство недвижимости', city_name='Воронеж')
-    print(len(l))
-    print(l)
+    db.test_select()
