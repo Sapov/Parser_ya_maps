@@ -1,7 +1,8 @@
 запуск docker run -d -p 6379:6379 redis
-# Для разработки с авто-перезагрузкой
+
+
 celery -A celery_app worker --loglevel=info
 
-flower
+Inspect TAsk
 celery -A celery_app inspect active
 
