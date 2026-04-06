@@ -25,31 +25,32 @@ services:
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    restart: always
+    build: .
     volumes:
       - ./app:/app
     depends_on:
       - redis
-    command: celery -A celery_app worker --loglevel=info --concurrency=1
+      - app
+    command: 'celery -A celery_app worker --loglevel=info --concurrency=1'
+
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   flower:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    container_name: flower
+    build: .
     ports:
-      - "5555:5555"
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      - 5555:5555
+    volumes:
+      - /:/app
+      - static_volume:/django/static
+      - media_volume:/django/media
     depends_on:
       - redis
-      - celery_worker
-    command: celery -A celery_app flower --port=5555 --address=0.0.0.0
+    command: 'celery -A celery_app flower'
 
 volumes:
   redis_data:
