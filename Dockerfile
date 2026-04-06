@@ -8,7 +8,7 @@ RUN pip install uv
 WORKDIR /app
 
 # Копируем файлы зависимостей
-COPY pyproject.toml uv.lock* requirements.txt ./
+COPY pyproject.toml uv.lock*  ./
 
 # Установка зависимостей в виртуальное окружение
 RUN uv venv /opt/venv
