@@ -1,4 +1,4 @@
-from unicodedata import category
+from sqlalchemy import select, and_, or_
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -318,15 +318,28 @@ class DB:
             session.close()
 
 
-    def test_select(self):
+    def city_select(self, city:str):
         with self.Session() as session:
-            stmt = select(City).where(City.id == 2)
-            result = session.execute(stmt)
+            query = select(Organisations).join(
+                City, Organisations.city_id == City.id
+            ).where(
+                and_(
+                    City.city == city,
+                    Organisations.mail.isnot(None),
+                    Organisations.mail != ""
+                )
+            )
 
-            print(result.one())
+
+            result = session.execute(query)
+            organisations = result.scalars().all()
+
+            for i in organisations:
+
+                print(f'Name: {i.title} \tSite: {i.site} \tMail:  {i.mail}')
 
 
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    db.test_select()
+    db.city_select('Москва')

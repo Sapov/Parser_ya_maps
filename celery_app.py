@@ -23,6 +23,9 @@ celery_app.conf.update(
     result_expires=86400,  # Результаты хранятся 24 часа
     task_acks_late=True,  # Подтверждение после выполнения
     worker_max_tasks_per_child=1000,  # Перезапуск воркера после 1000 задач
+    task_always_eager=False,  # Должно быть False для асинхронной работы
+    task_eager_propagates=False,  # Должно быть False
+    task_ignore_result=False,
 )
 
 # Настройка логов

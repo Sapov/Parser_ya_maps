@@ -112,6 +112,8 @@ class ParserCard:
         for idx, element in enumerate(elements, 1):
             try:
                 item = self._parse_single_card_safe(element)
+                print(f'Сдается мне что DICT не обнуляется {item}')
+                logger.info(f'Сдается мне что DICT не обнуляется № {idx} {item}')
                 if item:
                     db.add_items_link(item)
                     parsed_count += 1
