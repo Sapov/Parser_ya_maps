@@ -73,7 +73,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir fastapi uvicorn celery redis && \
     pip install --no-cache-dir -r requirements.txt || \
-    pip install --no-cache-dir selenium undetected-chromedriver sqlalchemy aiohttp beautifulsoup4 lxml pydantic python-dotenv
+    pip install --no-cache-dir selenium undetected-chromedriver sqlalchemy aiohttp aiosqlite beautifulsoup4 lxml pydantic python-dotenv
 
 # Копируем весь код
 COPY . .
