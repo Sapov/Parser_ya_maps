@@ -19,16 +19,16 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - ./app:/app
+      - .:/app
     depends_on:
       - redis
-    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   celery_worker:
     restart: always
     build: .
     volumes:
-      - ./app:/app
+      - .:/app
     depends_on:
       - redis
     command: 'celery -A celery_app worker --loglevel=info --concurrency=1'
