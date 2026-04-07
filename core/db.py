@@ -334,9 +334,10 @@ class DB:
 
             for i in organisations:
                 print(f'Name: {i.title}\n'
-                      f' Site: {i.site} \nMail:  {i.mail}')
+                      f'Site: {i.site} \nMail:  {i.mail}')
 
             print(f'Количество записей с email адресом {len(organisations)} шт.')
+            return organisations
 
     def city_select(self, city: str):
         with self.Session() as session:
@@ -356,4 +357,4 @@ class DB:
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    db.city_select('Ростов')
+    db.city_select_with_email('Алушта')

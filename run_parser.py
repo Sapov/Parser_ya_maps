@@ -19,6 +19,6 @@ if __name__ == '__main__':
 
 
     try:
-        run_parser('Агентство недвижимости', "Ярославль", 2000)
+        run_parser('Агентство недвижимости', "Тамбов", 2000)
     except Exception as e:
         print(f'Error {e}')
