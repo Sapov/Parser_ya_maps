@@ -1,11 +1,16 @@
 import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
+# Получаем абсолютный путь к корню проекта
+BASE_DIR = Path(__file__).resolve().parent.parent  # поднимаемся на 2 уровня вверх
+
 
 class Settings(BaseSettings):
-    db_url: str = "sqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3"
-    async_bd_url: str = "sqlite+aiosqlite:////home/sasha/PycharmProjects/Parser_ya_maps/core/db.sqlite3"
+    db_url: str = f"sqlite:///{BASE_DIR}/db.sqlite3"
+
+    async_bd_url: str = f"sqlite+aiosqlite:///{BASE_DIR}/db.sqlite3"
     db_echo: bool = False
     app_name: str = "Parser Yandex Map"
 
