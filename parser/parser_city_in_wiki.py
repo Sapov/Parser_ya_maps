@@ -1,4 +1,7 @@
+import json
 import time
+from os import write
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -79,6 +82,11 @@ def parse_cities_selenium():
 if __name__ == "__main__":
     cities = parse_cities_selenium()
     print(f"Всего распарсено городов: {len(cities)}")
+
+
+    with open('all_cities.json', 'w', encoding='utf-8') as file:
+        json.dump(cities, file,ensure_ascii=False, indent=4)
+
     # Вывод первых 5 городов для примера
     for city in cities[:5]:
         print(city)

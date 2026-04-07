@@ -1,3 +1,5 @@
+from unicodedata import category
+
 from sqlalchemy import select, and_, or_
 
 from sqlalchemy import create_engine, select
@@ -353,8 +355,30 @@ class DB:
             for i in organisations:
                 print(f'Name: {i.title} \tSite: {i.site} \tMail:  {i.mail}')
 
+    def category_select_with_email(self, category: str):
+        with self.Session() as session:
+            query = select(Organisations).join(
+                Category, Organisations.category_id == Category.id
+            ).where(
+                and_(
+                    Category.category == category,
+                    Organisations.mail.isnot(None),
+                    Organisations.mail != ""
+                )
+            )
+
+            result = session.execute(query)
+            organisations = result.scalars().all()
+
+            for i in organisations:
+                print(f'Name: {i.title}\n'
+                      f'Site: {i.site} \nMail:  {i.mail}')
+
+            print(f'Количество записей с email адресом {len(organisations)} шт.')
+            return organisations
+
 
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    db.city_select_with_email('Алушта')
+    db.category_select_with_email('Агентство недвижимости')
