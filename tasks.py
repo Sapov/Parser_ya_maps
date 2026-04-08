@@ -2,7 +2,8 @@ import time
 from typing import Dict, Any, List
 from celery_app import celery_app
 import logging
-from run_parser import run_parser
+
+from run_parser import run_parser, parse_all_city
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,14 @@ def parse(self, category: str, city: str, quantity: int) -> Dict[str, Any]:
 
     logger.info(f"Парсинг {category} запущен для города {city}")
     return {"message": f"Парсинг {category} запущен для города {city} {self.request.id}"}
+
+
+@celery_app.task(name="tasks.parser_all_city", bind=True)
+def parser_all_city(self, category:str):
+    parse_all_city(category)
+
+    logger.info(f"Парсинг {category} запущен по всем городам")
+    return {"message": f"Парсинг {category} запущен по всем городам {self.request.id}"}
 
 
 

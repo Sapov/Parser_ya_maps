@@ -120,6 +120,17 @@ class DB:
         finally:
             session.close()
 
+    def get_city(self):
+        session = self.Session()
+        try:
+            stmt = select(City)
+            result = session.execute(stmt)
+            organisations = result.scalars().all()
+
+            return organisations
+        finally:
+            session.close()
+
     def get_by_category_and_city(self, category_name: str, city_name: str) -> list[Organisations]:
         """Получает все организации по категории и городу"""
         session = self.Session()
@@ -381,4 +392,4 @@ class DB:
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    db.category_select_with_email('Агентство недвижимости')
+    print(db.get_city())
