@@ -7,10 +7,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 from core.db import DB
+from parser.models.city_all import CityP
 
 
 def parse_cities_selenium():
-    # 1. Настройка браузера (без графического интерфейса)
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -59,15 +59,16 @@ def parse_cities_selenium():
                 # Сохраняем только строки, где есть название города
                 if city_name:
                     cities_data.append({
-                                "Номер": number,
-                        "Город": city_name,
-                        "Регион": region,
-                        "Федеральный округ": federal_district,
-                        "Население": population,
-                        "Год основания": foundation_year,
-                        "Год статуса города": city_status_year,
-                        "Прежние названия": former_names,
+                        "number": number,
+                        "city_name": city_name,
+                        "region": region,
+                        "federal_district": federal_district,
+                        "population": population,
+                        "foundation_year": foundation_year,
+                        "city_status_year": city_status_year,
+                        "former_names": former_names,
                     })
+
             except Exception as e:
                 # Если структура строки нарушена, пропускаем её
                 print(f"Ошибка при обработке строки: {e}")
@@ -82,17 +83,14 @@ def parse_cities_selenium():
     return cities_data
 
 
+def load_in_base(lst_city: list):
+    new_city = DB()
+    for i in lst_city:
+        itm = CityP(**i)
+        new_city.add_all_city(itm.dict())
+
+
 if __name__ == "__main__":
     cities = parse_cities_selenium()
-    print(f"Всего распарсено городов: {len(cities)}")
-
-
-    with open('all_cities.json', 'w', encoding='utf-8') as file:
-        json.dump(cities, file,ensure_ascii=False, indent=4)
-
-    # Вывод первых 5 городов для примера
-    for city in cities[:5]:
-        print(city)
-
-    itm = DB()
-    itm.add_all_city(cities)
+    load_in_base(cities)
+    print(f"Всего распарсено c википедии {len(cities)} городов: ")
