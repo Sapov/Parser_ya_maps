@@ -31,14 +31,13 @@ class ParserConfig:
     scroll_delay_max: int = 7
     page_load_timeout: int = 10
     element_wait_timeout: int = 10
-    max_scroll_attempts: int = 50
+    max_scroll_attempts: int = 150
     batch_size: int = 10
 
 
 class ParserCard:
     """
-    Парсер карточек Яндекс.Карт
-    Оптимизирован для производительности и надежности
+    Парсер карточек Я.Карт
     """
 
     # Константы для селекторов

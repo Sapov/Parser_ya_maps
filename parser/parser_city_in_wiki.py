@@ -6,6 +6,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
+from core.db import DB
+
+
 def parse_cities_selenium():
     # 1. Настройка браузера (без графического интерфейса)
     chrome_options = Options()
@@ -56,7 +59,7 @@ def parse_cities_selenium():
                 # Сохраняем только строки, где есть название города
                 if city_name:
                     cities_data.append({
-                        "Номер": number,
+                                "Номер": number,
                         "Город": city_name,
                         "Регион": region,
                         "Федеральный округ": federal_district,
@@ -90,3 +93,6 @@ if __name__ == "__main__":
     # Вывод первых 5 городов для примера
     for city in cities[:5]:
         print(city)
+
+    itm = DB()
+    itm.add_all_city(cities)

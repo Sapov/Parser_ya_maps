@@ -1,11 +1,10 @@
-from unicodedata import category
-
 from sqlalchemy import select, and_, or_
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from parser.models import Base
+# from parser.models.city_all import CityAll
 from parser.models.organisations import Organisations
 from parser.models.city import City
 from parser.models.category import Category
@@ -24,9 +23,14 @@ class DB:
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
-
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
+
+    def load_all_cites(self):
+        '''
+        Звгружаю все города страны в новую базу
+        :return:
+        '''
 
     async def insert_data(self, item: dict):
         async with self.async_session() as session:
@@ -126,7 +130,6 @@ class DB:
             stmt = select(City)
             result = session.execute(stmt)
             organisations = result.scalars().all()
-
             return organisations
         finally:
             session.close()
@@ -387,6 +390,25 @@ class DB:
 
             print(f'Количество записей с email адресом {len(organisations)} шт.')
             return organisations
+
+    def add_all_city(self, city_lst: list):
+        session = self.Session()
+        for item in city_lst:
+            city = CityP(
+                number=item.get('number'),
+                city_name=item.get('city_name'),
+                region=item.get('region'),
+                federal_district=item.get('federal_district'),
+                population=item.get('population'),
+                foundation_year=item.get('foundation_year'),
+                city_status_year=item.get('city_status_year'),
+                former_names=item.get('former_names'),
+
+            )
+            session.add(city)
+            session.flush()
+        session.commit()
+
 
 
 # Проверка работы
