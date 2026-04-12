@@ -32,12 +32,4 @@ jobs:
       # Deploy
       - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
                 
-      # Запускаем Docker Compose
-      - name: Start Docker Compose
-        run: |
-          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}
-            cd ${{ env.SERVER_PATH }}
-            
-            # Собираем и запускаем
-            docker compose up -d --build
-            
+     
