@@ -4,7 +4,7 @@ on:
   workflow_dispatch
 
 env:
-  SERVER_HOST: 91.202.25.116
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
   SERVER_USER: sasha
   SERVER_PATH: /home/sasha/test_dir
 
