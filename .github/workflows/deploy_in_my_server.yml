@@ -25,6 +25,12 @@ jobs:
         with:
           key: "${{ secrets.MY_KEY_SERVER }}"
           known_hosts: "just-a-placeholder-so-we-dont-get-errors"
+      
+      - name: Generate auth hosts
+        run: ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # Deploy
+      - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
                 
       # Запускаем Docker Compose
       - name: Start Docker Compose
