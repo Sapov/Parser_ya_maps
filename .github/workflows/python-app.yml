@@ -1,0 +1,31 @@
+name: test_parser
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  my_testing:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Hello Word
+      run: echo "Hello Word from testing"
+    - name: Load files
+      uses: actions/checkout@v4
+   
+
+    - name: view files
+      run: ls -la
+  
+  my_depoly:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Two steps
+        run: echo "TWO Steps from deploy"
+      
+    
+            
+    
+        
