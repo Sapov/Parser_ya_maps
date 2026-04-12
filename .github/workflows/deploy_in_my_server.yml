@@ -29,28 +29,9 @@ jobs:
       # Запускаем Docker Compose
       - name: Start Docker Compose
         run: |
-          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} << 'EOF'
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}
             cd ${{ env.SERVER_PATH }}
             
             # Собираем и запускаем
             docker compose up -d --build
             
-            # Ждем готовности контейнеров
-            sleep 10
-            
-            
-            # Проверяем статус
-            docker compose ps
-          EOF
-      
-      
-      # Уведомление об успешном деплое (опционально)
-      - name: Send notification
-        if: success()
-        run: |
-          echo "✅ Deploy completed successfully!"
-          
-      - name: Send failure notification
-        if: failure()
-        run: |
-          echo "❌ Deploy failed!"
