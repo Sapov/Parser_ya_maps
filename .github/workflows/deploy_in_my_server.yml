@@ -6,7 +6,7 @@ on:
 env:
   SERVER_HOST: 91.202.25.116
   SERVER_USER: sasha
-  SERVER_PATH: /root/sasha
+  SERVER_PATH: /home/sasha/test_dir
 
 jobs:
 
@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: ONE STEP
       - uses: actions/checkout@v3
       - run: ls -la
       
