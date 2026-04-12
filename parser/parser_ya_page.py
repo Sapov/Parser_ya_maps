@@ -15,7 +15,7 @@ from parser.old_parser_card import ParserCard, ParserConfig
 from selenium.webdriver.common.by import By
 import logging
 
-from parser.parser_site import ParseSite
+from parser.parser_site import run as run_parsing_site, ParseSite
 
 logger = logging.getLogger(__name__)
 
