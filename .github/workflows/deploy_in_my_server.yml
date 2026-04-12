@@ -33,5 +33,5 @@ jobs:
       - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
 
       - name: Run deploy script on server
-        run: ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "bash /home/user/deploy.sh"          
+        run: ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "bash /home/sasha/parser/deploy.sh"          
      
