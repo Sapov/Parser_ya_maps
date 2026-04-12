@@ -4,9 +4,9 @@ on:
   workflow_dispatch
 
 env:
-  SERVER_HOST: 89.108.77.14
-  SERVER_USER: root
-  SERVER_PATH: /root/github-test
+  SERVER_HOST: 91.202.25.116
+  SERVER_USER: sasha
+  SERVER_PATH: /root/sasha
 
 jobs:
 
