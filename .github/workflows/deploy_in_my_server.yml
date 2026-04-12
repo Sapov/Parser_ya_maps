@@ -5,8 +5,8 @@ on:
 
 env:
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
-  SERVER_USER: sasha
-  SERVER_PATH: /home/sasha/parser
+  SERVER_USER: ${{ secrets.USER_NAME }}
+  SERVER_PATH: ${{ secrets.SERVER_FOLDER }}
 
 jobs:
 
