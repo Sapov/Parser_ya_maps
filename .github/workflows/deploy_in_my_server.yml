@@ -6,7 +6,7 @@ on:
 env:
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
   SERVER_USER: ${{ secrets.SERVER_NAME }}
-  SERVER_PATH: /home/sasha/test_dir
+  SERVER_PATH: /home/sasha/parser
 
 jobs:
 
