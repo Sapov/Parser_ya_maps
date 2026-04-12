@@ -28,6 +28,31 @@ jobs:
           
       - name: Generate auth hosts
         run: ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
+      # Запускаем Docker Compose на сервере
+      - name: Run Docker Compose on server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.MY_KEY_SERVER }}
+          script_stop: true
+          script: |
+            cd ${{ env.SERVER_PATH }}
+            
+            # Создаем .env файл на сервере (если нужно)
+            # echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            
+            # Скачиваем последние образы (опционально)
+            docker compose pull
+            
+            # Пересобираем и запускаем контейнеры
+            docker compose up -d --build --force-recreate
+            
+            # Удаляем неиспользуемые образы
+            docker system prune -f
+            
+            # Проверяем статус
+            docker compose ps  
       
       # Deploy
       - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
