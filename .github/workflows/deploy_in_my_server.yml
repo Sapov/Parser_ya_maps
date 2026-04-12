@@ -32,8 +32,8 @@ jobs:
       - name: Run Docker Compose on server
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.MY_KEY_SERVER }}
           script_stop: true
           script: |
