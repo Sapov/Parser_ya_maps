@@ -10,4 +10,7 @@ Status of Last Deployment: <br>
 
 https://github.com/Sapov/Parser_ya_maps_0/actions/workflows/WORKFLOW-FILE.yml/badge.svg?branch=master
 
+[![build](https://github.com/Parser_ya_maps_0/workflows/badge.svg?brunch=master)](https://github.com/remarkablemark/paccurate/actions/workflows/build.yml)
+
+
 
