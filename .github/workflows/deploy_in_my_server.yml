@@ -6,7 +6,7 @@ on:
 env:
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
   SERVER_USER: ${{ secrets.SERVER_NAME }}
-  SERVER_PATH: ${{ vars.SERVER_FOLDER }}
+  SERVER_PATH: ${{ secrets.SERVER_FOLDER }}
 
 jobs:
 
