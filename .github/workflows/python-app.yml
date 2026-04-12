@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Two steps
-        run: "TWO Steps from deploy"
+        run: echo "TWO Steps from deploy"
       
     
             
