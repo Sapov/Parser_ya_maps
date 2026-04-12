@@ -1,0 +1,26 @@
+name: Deploy
+
+on: workflow_dispatch
+
+
+env:
+  SERVER_HOST: 192.168.1.201
+  SERVER_USER: sasha
+  SERVER_PATH: /sasha/app
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions@checkout@v4
+
+      - name: Install SSH Keys
+      - uses: shimataro
+      
+      
+
+
+  
+  
