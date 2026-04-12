@@ -4,8 +4,8 @@ on:
   workflow_dispatch
 
 env:
-  SERVER_HOST: ${{ secrets.SERVER_HOST }}
-  SERVER_USER: ${{ secrets.SERVER_NAME }}
+  SERVER_HOST: "${{ secrets.SERVER_HOST }}"
+  SERVER_USER: sasha
   SERVER_PATH: /home/sasha/parser
 
 jobs:
