@@ -729,7 +729,6 @@ def cleanup_driver_pool():
     pool = get_driver_pool()
     pool.close_all()
 
-
 # Регистрируем очистку при завершении
 import atexit
 
