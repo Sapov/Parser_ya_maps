@@ -402,7 +402,7 @@ class DB:
 
 
     def find_duplicates(self):
-        """Находит все дубликаты по полю link"""
+        """Находит все дубликаты по полю mail"""
         with self.Session() as session:
 
             duplicates = session.query(
