@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, func
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -401,8 +401,28 @@ class DB:
         session.commit()
 
 
+    def find_duplicates(self):
+        """Находит все дубликаты по полю link"""
+        with self.Session() as session:
+
+            duplicates = session.query(
+                Organisations.mail,
+                func.count(Organisations.id).label('count')
+            ).group_by(
+                Organisations.mail
+            ).having(
+                func.count(Organisations.id) > 1
+            ).all()
+
+            # Использование
+            for link, count in duplicates:
+                print(f"Организация '{link}' встречается {count} раз")
+            return duplicates
+
+
+
 
 # Проверка работы
 if __name__ == "__main__":
     db = DB()
-    print(db.get_city())
+    print(db.find_duplicates())

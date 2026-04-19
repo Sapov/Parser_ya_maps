@@ -90,30 +90,65 @@ class DriverPool:
 
     def _create_driver(self) -> uc.Chrome:
         """Создает новый драйвер с конфигурацией"""
+        """Настройка и создание драйвера с улучшенной защитой"""
         options = uc.ChromeOptions()
 
-        # Применяем стандартные настройки
+        # Основные опции
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
+
+        # Критические опции для обхода блокировок
+        options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-features=VizDisplayCompositor")
+        options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+        options.add_argument("--disable-web-security")
+        options.add_argument("--disable-features=BlockInsecurePrivateNetworkRequests")
+
+        # Скрываем автоматизацию
+        options.add_argument("--disable-automation")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        # Улучшаем стабильность
         options.add_argument("--disable-logging")
         options.add_argument("--log-level=3")
+        options.add_argument("--silent")
 
-        driver = uc.Chrome(
-            version_main=self.config.get('version_chrome', 146),
-            options=options
+        # Увеличиваем таймауты
+        options.add_argument("--timeout=30")
+
+        # User-Agent (маскируем)
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36")
+
+        self.driver = uc.Chrome(
+            version_main=self.config.version_chrome,
+            options=options,
+            patcher_force_close=True,  # Важно!
+            suppress_welcome=True,  # Скрываем приветствие
+            use_subprocess=True  # Используем subprocess для стабильности
         )
 
-        driver.set_page_load_timeout(self.config.get('page_load_timeout', 10))
+        # Настройки таймаутов
+        self.driver.set_page_load_timeout(self.config.page_load_timeout)
+        self.driver.set_script_timeout(self.config.element_wait_timeout)
+        self.driver.implicitly_wait(5)
+
+        # Выполняем скрипты для маскировки
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
+        })
 
         self._created_count += 1
         logger.info(f"Создан новый драйвер (всего создано: {self._created_count})")
+        logger.info(f"Драйвер настроен для {self.category} - {self.location}")
 
-        return driver
+
+        return self.driver
 
     def _quit_driver(self, driver: uc.Chrome):
         """Безопасное закрытие драйвера"""
