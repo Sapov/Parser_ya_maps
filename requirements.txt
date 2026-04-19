@@ -4,7 +4,7 @@ uvicorn==0.24.0
 celery==5.3.4
 redis==5.0.1
 selenium==4.15.2
-undetected-chromedriver==3.5.4
+undetected-chromedriver==3.5.5
 sqlalchemy==2.0.23
 aiohttp==3.9.1
 beautifulsoup4==4.12.2
