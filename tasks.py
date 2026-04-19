@@ -59,26 +59,6 @@ def process_data(self, data: List[Dict]) -> Dict[str, Any]:
     }
 
 
-@celery_app.task(name="tasks.long_running_task", bind=True)
-def long_running_task(self, task_data: Dict) -> Dict:
-    """
-    Длительная задача
-    """
-    logger.info(f"Запущена длительная задача {self.request.id}")
-
-    for i in range(10):
-        time.sleep(1)
-        self.update_state(
-            state="PROGRESS",
-            meta={"progress": i + 1, "total": 10}
-        )
-
-    return {
-        "task_id": self.request.id,
-        "result": "completed",
-        "data": task_data
-    }
-
 
 # Пример асинхронной задачи
 @celery_app.task(name="tasks.async_example", bind=True)

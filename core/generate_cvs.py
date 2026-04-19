@@ -42,18 +42,5 @@ def main(name):
     csv_for_listmonk(name, load_data(name))
 
 
-def load_all_city():
-    import json
-
-    # Открываем файл для чтения
-    with open("/home/sasha/PycharmProjects/Parser_ya_maps/parser/all_cities.json", "r", encoding="utf-8") as f:
-        # Загружаем данные из файла в переменную
-        data = json.load(f)
-        citys = []
-        for i in data:
-            citys.append(i['Город'])
-        print(citys)
-
 if __name__ == '__main__':
-    load_all_city()
-    # main('Агенство недвижимости')
+    main('Агентство недвижимости')

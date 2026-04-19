@@ -380,12 +380,11 @@ class DB:
             result = session.execute(query)
             organisations = result.scalars().all()
 
-            for i in organisations:
-                print(f'Name: {i.title}\n'
-                      f'Site: {i.site} \nMail:  {i.mail}')
 
             print(f'Количество записей с email адресом {len(organisations)} шт.')
             return organisations
+
+
 
     def add_all_city(self, city_dict: dict):
         '''
