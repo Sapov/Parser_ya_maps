@@ -10,6 +10,11 @@ def csv_for_listmonk(name_file: str, lst_data: list):
         writer.writerows(lst_data)
 
 
+def chank_lst(lst_data: list):
+    for i in range(1, len(lst_data), 20):
+        csv_for_listmonk(f'Number {i}.csv', lst_data[i:i+20])
+
+
 # class GenerateCSV:
 def load_data(category: str):
     db = DB()
@@ -40,7 +45,7 @@ def create_string(mail: str, organisation: Organisations):
 
 def main(name):
     csv_for_listmonk(name, load_data(name))
-
+    # chank_lst(load_data(name))
 
 if __name__ == '__main__':
-    main('Агентство недвижимости')
+    main('test_f')

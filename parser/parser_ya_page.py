@@ -8,10 +8,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
+
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
 from core.db import DB
-from parser.old_parser_card import ParserCard, ParserConfig
 from selenium.webdriver.common.by import By
 import logging
 
@@ -112,13 +113,26 @@ class PageParser:
         """Настройка и создание драйвера"""
         try:
             # Создаем временный парсер для получения настроек
-            temp_parser = ParserCard(
-                category=self.category,
-                location=self.location,
-                quantity=None
+            options = uc.ChromeOptions()
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-blink-features=AutomationControlled")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
+
+            # Дополнительные опции для стабильности
+            options.add_argument("--disable-features=VizDisplayCompositor")
+            options.add_argument("--disable-logging")
+            options.add_argument("--log-level=3")
+
+            self.driver = uc.Chrome(
+                version_main=self.config.version_chrome,
+                options=options
             )
-            temp_parser.setup_driver()
-            self.driver = temp_parser.driver
+            self.driver.set_page_load_timeout(self.config.page_load_timeout)
+            self.wait = WebDriverWait(self.driver, self.config.element_wait_timeout)
+            logger.info(f"Драйвер настроен для {self.category} - {self.location}")
             self.driver.set_page_load_timeout(self.config.page_load_timeout)
             self.wait = WebDriverWait(self.driver, self.config.page_load_timeout)
             logger.info("Драйвер успешно настроен")
