@@ -30,6 +30,9 @@ class PageParserConfig:
     retry_delay: int = 2
     page_load_timeout: int = 10
     save_to_json: bool = False
+    version_chrome = 146
+    element_wait_timeout = 3
+
 
 
 class PageParser:
