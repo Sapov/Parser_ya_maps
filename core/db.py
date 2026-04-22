@@ -388,7 +388,7 @@ class DB:
 
     def add_all_city(self, city_dict: dict):
         '''
-        Звгружаю все города страны в новую базу
+        Звгружаю c wiki все города страны в новую базу
         :return:
         '''
 
