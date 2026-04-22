@@ -15,6 +15,7 @@ class DB:
     1. Копируем таблицу для работы copy_table_for_work
     2. Удаляем записи дубликатов email
     '''
+
     def __init__(self):
         self.engine = create_engine(
             url=settings.db_url,
@@ -25,36 +26,24 @@ class DB:
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
-    def copy_table_for_work(self, source_table_name, target_table_name='table_temp'):
+    def copy_table_for_work(self, category_id: int, source_table_name, target_table_name='table_temp' ):
         """
         Копируем таблицу для пробразований называем table_temp
         """
         with self.engine.connect() as conn:
-            # PostgreSQL
-            if self.engine.dialect.name == 'postgresql':
-                conn.execute(text(f"""
-                    CREATE TABLE {target_table_name} AS 
-                    SELECT * FROM {source_table_name}
-                """))
 
-            # MySQL
-            elif self.engine.dialect.name == 'mysql':
-                conn.execute(text(f"""
-                    CREATE TABLE {target_table_name} AS 
-                    SELECT * FROM {source_table_name}
-                """))
+            conn.execute(text(f"DROP TABLE IF EXISTS {target_table_name}"))
 
-            # SQLite
-            elif self.engine.dialect.name == 'sqlite':
-                conn.execute(text(f"""
-                    CREATE TABLE {target_table_name} AS 
-                    SELECT * FROM {source_table_name}
-                """))
+            conn.execute(text(f"""
+                CREATE TABLE {target_table_name} AS 
+                SELECT * FROM {source_table_name} WHERE category_id = {category_id}
+            """))
 
             conn.commit()
             logger.info(f'Сделал копию таблицы {target_table_name} -> {source_table_name}')
+            print(f'Сделал копию таблицы {target_table_name} -> {source_table_name}')
 
-    def remove_duplicates_in_tables(self, table_name, email_field='mail'):
+    def remove_duplicates_in_tables(self, table_name='table_temp', email_field='mail'):
         """
         Удаляем записи дубликатов email
         """
@@ -74,7 +63,7 @@ class DB:
 
             # Удаляем старую таблицу
             sql_drop = text(f"DROP TABLE {table_name}")
-
+            #
             # Переименовываем временную
             sql_rename = text(f"ALTER TABLE {temp_table} RENAME TO {table_name}")
 
@@ -99,7 +88,6 @@ class DB:
 
             print(f"Найдено {len(results)} записей с запятой в поле {mail_field}")
             return results
-
 
     def split_emails_to_new_table(self, source_table, target_table, email_field='mail'):
         """
@@ -150,15 +138,13 @@ class DB:
             print(f"\n📊 Итого: {inserted_count} новых записей создано")
             return inserted_count
 
-
     def run(self):
-        self.copy_table_for_work('Organisations')
-
+        # self.copy_table_for_work(2, 'Organisations')
+        self.remove_duplicates_in_tables()
 
 if __name__ == '__main__':
     db = DB()
     db.run()
-
 
     # db.remove_duplicates_safe('Organisations_copy')
     # db.find_emails_with_comma('Organisations_copy')
