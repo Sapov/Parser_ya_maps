@@ -20,65 +20,6 @@ from parser.parser_ya_page import PageParser
 
 logger = logging.getLogger(__name__)
 
-def _create_driver(self) -> uc.Chrome:
-    """Создает новый драйвер с конфигурацией"""
-    options = uc.ChromeOptions()
-
-    # Применяем стандартные настройки
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-features=VizDisplayCompositor")
-    options.add_argument("--disable-logging")
-    options.add_argument("--log-level=3")
-
-    # Опции для предотвращения краша
-    options.add_argument("--disable-crash-reporter")
-    options.add_argument("--disable-in-process-stack-traces")
-    options.add_argument("--disable-logging")
-    options.add_argument("--log-level=3")
-    options.add_argument("--silent")
-
-    # Ограничение памяти
-    options.add_argument("--memory-pressure-off")
-    options.add_argument("--max_old_space_size=256")
-    options.add_argument("--js-flags='--max-old-space-size=256'")
-
-    # Отключение ненужных функций
-    options.add_argument("--disable-background-networking")
-    options.add_argument("--disable-background-timer-throttling")
-    options.add_argument("--disable-backgrounding-occluded-windows")
-    options.add_argument("--disable-breakpad")
-    options.add_argument("--disable-client-side-phishing-detection")
-    options.add_argument("--disable-default-apps")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees")
-    options.add_argument("--disable-hang-monitor")
-    options.add_argument("--disable-ipc-flooding-protection")
-    options.add_argument("--disable-popup-blocking")
-    options.add_argument("--disable-prompt-on-repost")
-    options.add_argument("--disable-renderer-backgrounding")
-    options.add_argument("--disable-sync")
-    options.add_argument("--disable-web-resources")
-    options.add_argument("--force-color-profile=srgb")
-    options.add_argument("--metrics-recording-only")
-    options.add_argument("--no-first-run")
-    options.add_argument("--password-store=basic")
-    options.add_argument("--use-mock-keychain")
-
-
-
-    driver = uc.Chrome(
-        version_main=self.config.get('version_chrome', 146),
-        options=options
-    )
-
-    return driver
-
 @dataclass
 class ParserConfig:
     """Конфигурация парсера"""
@@ -134,26 +75,90 @@ class ParserCard:
 
 
     def setup_driver(self):
+
         options = uc.ChromeOptions()
+
+        # Основные опции
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
 
-        # Дополнительные опции для стабильности
+        # Критически важные опции для стабильности
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-plugins")
+        options.add_argument("--disable-images")  # Отключить загрузку изображений
+        options.add_argument("--disable-javascript")  # Если не нужен JS
+        options.add_argument("--disable-web-security")
         options.add_argument("--disable-features=VizDisplayCompositor")
+        options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+
+        # Оптимизация памяти
+        options.add_argument("--disable-background-timer-throttling")
+        options.add_argument("--disable-backgrounding-occluded-windows")
+        options.add_argument("--disable-renderer-backgrounding")
+        options.add_argument("--disable-breakpad")  # Отключить отчеты о крашах
+        options.add_argument("--disable-crash-reporter")
+
+        # Улучшаем стабильность
         options.add_argument("--disable-logging")
         options.add_argument("--log-level=3")
+        options.add_argument("--silent")
 
+        # Увеличиваем таймауты
+        options.add_argument("--timeout=30")
+
+        # User-Agent
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36")
+
+        # Экспериментальные опции
+        options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        # Создаём драйвер
         self.driver = uc.Chrome(
             version_main=self.config.version_chrome,
-            options=options
+            options=options,
+            patcher_force_close=True,
+            suppress_welcome=True,
+            use_subprocess=True
         )
-        self.driver.set_page_load_timeout(self.config.page_load_timeout)
-        self.wait = WebDriverWait(self.driver, self.config.element_wait_timeout)
-        logger.info(f"Драйвер настроен для {self.category} - {self.location}")
+
+        # Устанавливаем таймауты
+        self.driver.set_page_load_timeout(60)  # Увеличен с 30 до 60
+        self.driver.set_script_timeout(30)
+        self.driver.implicitly_wait(10)
+
+        # Дополнительные настройки через CDP
+        try:
+            self.driver.execute_cdp_cmd('Network.setCacheDisabled', {'cacheDisabled': True})
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+                "userAgent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'
+            })
+        except:
+            pass
+        # options = uc.ChromeOptions()
+        # options.add_argument("--headless=new")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-blink-features=AutomationControlled")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--window-size=1920,1080")
+        #
+        # # Дополнительные опции для стабильности
+        # options.add_argument("--disable-features=VizDisplayCompositor")
+        # options.add_argument("--disable-logging")
+        # options.add_argument("--log-level=3")
+        #
+        # self.driver = uc.Chrome(
+        #     version_main=self.config.version_chrome,
+        #     options=options
+        # )
+        # self.driver.set_page_load_timeout(self.config.page_load_timeout)
+        # self.wait = WebDriverWait(self.driver, self.config.element_wait_timeout)
+        # logger.info(f"Драйвер настроен для {self.category} - {self.location}")
 
     def close(self):
         """Закрытие драйвера"""
