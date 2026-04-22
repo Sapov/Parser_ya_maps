@@ -117,17 +117,52 @@ class PageParser:
         try:
             # Создаем временный парсер для получения настроек
             options = uc.ChromeOptions()
+
+            # Применяем стандартные настройки
             options.add_argument("--headless=new")
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-blink-features=AutomationControlled")
             options.add_argument("--disable-gpu")
             options.add_argument("--window-size=1920,1080")
-
-            # Дополнительные опции для стабильности
             options.add_argument("--disable-features=VizDisplayCompositor")
             options.add_argument("--disable-logging")
             options.add_argument("--log-level=3")
+
+            # Опции для предотвращения краша
+            options.add_argument("--disable-crash-reporter")
+            options.add_argument("--disable-in-process-stack-traces")
+            options.add_argument("--disable-logging")
+            options.add_argument("--log-level=3")
+            options.add_argument("--silent")
+
+            # Ограничение памяти
+            options.add_argument("--memory-pressure-off")
+            options.add_argument("--max_old_space_size=256")
+            options.add_argument("--js-flags='--max-old-space-size=256'")
+
+            # Отключение ненужных функций
+            options.add_argument("--disable-background-networking")
+            options.add_argument("--disable-background-timer-throttling")
+            options.add_argument("--disable-backgrounding-occluded-windows")
+            options.add_argument("--disable-breakpad")
+            options.add_argument("--disable-client-side-phishing-detection")
+            options.add_argument("--disable-default-apps")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-extensions")
+            options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees")
+            options.add_argument("--disable-hang-monitor")
+            options.add_argument("--disable-ipc-flooding-protection")
+            options.add_argument("--disable-popup-blocking")
+            options.add_argument("--disable-prompt-on-repost")
+            options.add_argument("--disable-renderer-backgrounding")
+            options.add_argument("--disable-sync")
+            options.add_argument("--disable-web-resources")
+            options.add_argument("--force-color-profile=srgb")
+            options.add_argument("--metrics-recording-only")
+            options.add_argument("--no-first-run")
+            options.add_argument("--password-store=basic")
+            options.add_argument("--use-mock-keychain")
 
             self.driver = uc.Chrome(
                 version_main=self.config.version_chrome,
