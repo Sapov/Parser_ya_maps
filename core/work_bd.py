@@ -28,28 +28,36 @@ class DB:
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
     def dublicates(self, model, field:str):
-        '''
-        пройти по всем запиясям и где строка в почте с запятой разбить на две записи
-        :return:
-        '''
 
         session = self.Session()
+
+        """
+        Удаляет дубликаты, оставляя запись с минимальным ID
+        """
+        # Подзапрос с минимальными ID для каждого значения поля
         subquery = session.query(
-            func.min(model.id)
-        ).group_by(model.mail).scalar_subquery()
+            func.min(model.id).label('min_id')
+        ).group_by(
+            getattr(model, field)
+        ).subquery()
 
-        delete_stmt = select(model).where(
-            and_(
-                model.id.notin_(subquery),
-                # Дополнительные условия, если нужно
-            )
-        )
+        duplicates = session.query(model).filter(
+            model.id.notin_(subquery)
+        ).all()
 
-        result =session.execute(delete_stmt)
-        print(len(list(result.scalars())))
-        return list(result.scalars())
+        print(f"Найдено дубликатов: {len(duplicates)}")
+        for dup in duplicates:
+            print(f"ID: {dup.id}, {field}: {getattr(dup, field)}")
 
-        session.commit()
+        # Удаляем всё, что не входит в подзапрос
+        # deleted_count = session.query(model).filter(
+        #     model.id.notin_(session.query(subquery.c.min_id))
+        # ).delete(synchronize_session=False)
+        #
+        # session.commit()
+        # return deleted_count
+
+
 
 if __name__ == '__main__':
     db = DB()
