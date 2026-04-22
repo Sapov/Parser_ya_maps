@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
     && rm google-chrome-stable_current_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
+RUN pip install --upgrade pip setuptools wheel
 
 # Копируем requirements.txt
 COPY requirements.txt .

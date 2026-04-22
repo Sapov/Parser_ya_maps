@@ -20,6 +20,7 @@ from parser.parser_ya_page import PageParser
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ParserConfig:
     """Конфигурация парсера"""
@@ -31,7 +32,6 @@ class ParserConfig:
     element_wait_timeout: int = 20
     max_scroll_attempts: int = 150
     batch_size: int = 10
-
 
 
 # ============== ПАРСЕР ==============
@@ -73,7 +73,6 @@ class ParserCard:
         def __enter__(self):
             """Контекстный менеджер для автоматического закрытия драйвера"""
 
-
     def setup_driver(self):
         options = uc.ChromeOptions()
         options.add_argument("--headless=new")
@@ -104,8 +103,6 @@ class ParserCard:
                 self.driver.quit()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии драйвера: {e}")
-
-
 
     @lru_cache(maxsize=128)
     def _get_full_url(self) -> str:
@@ -254,7 +251,8 @@ class ParserCard:
 
             all_elements = current_elements
 
-            logger.info(f"Найдено элементов: {current_count} из города {self.location} (новых: {current_count - old_count})")
+            logger.info(
+                f"Найдено элементов: {current_count} из города {self.location} (новых: {current_count - old_count})")
 
             if current_count == old_count:
                 no_new_elements_count += 1
@@ -319,7 +317,6 @@ class ParserCard:
             return self.parse()
 
 
-
 # ============== ФУНКЦИЯ ЗАПУСКА ==============
 
 def runing_parser(category: str, location: str, quantity: int = None, config: ParserConfig = None) -> int:
@@ -331,7 +328,6 @@ def runing_parser(category: str, location: str, quantity: int = None, config: Pa
 
     PageParser(category, location).run()
     return result
-
 
 
 if __name__ == "__main__":
