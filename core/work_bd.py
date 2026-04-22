@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class DB:
     '''
     1. Копируем таблицу для работы copy_table_for_work
-    2. Удаляем записи дубликатов email
+    2. Удаляем строки с пустыми полями del_blank_srt
+    3. Удаляем записи дубликатов email remove_duplicates_in_tables
+
     '''
 
     def __init__(self):
@@ -26,12 +28,11 @@ class DB:
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
-    def copy_table_for_work(self, category_id: int, source_table_name, target_table_name='table_temp' ):
+    def copy_table_for_work(self, category_id: int, source_table_name, target_table_name='table_temp'):
         """
         Копируем таблицу для пробразований называем table_temp
         """
         with self.engine.connect() as conn:
-
             conn.execute(text(f"DROP TABLE IF EXISTS {target_table_name}"))
 
             conn.execute(text(f"""
@@ -48,104 +49,168 @@ class DB:
         Удаляем записи дубликатов email
         """
         with self.engine.connect() as conn:
-            # Создаём временную таблицу без дубликатов
-            temp_table = f"{table_name}_temp"
+            # Сначала проверим, есть ли дубликаты
+            check = conn.execute(text(f"""
+                SELECT {email_field}, COUNT(*) 
+                FROM {table_name} 
+                GROUP BY {email_field} 
+                HAVING COUNT(*) > 1
+                LIMIT 5
+            """)).fetchall()
 
-            sql_create = text(f"""
-                CREATE TABLE {temp_table} AS
-                SELECT * FROM {table_name} 
-                WHERE id IN (
-                    SELECT MIN(id) 
-                    FROM {table_name} 
-                    GROUP BY {email_field}
+            if check:
+                print("📋 Найдены дубликаты, примеры:")
+                for row in check:
+                    print(f"   {row[0]}: {row[1]} раза")
+
+                # Удаляем дубликаты
+                delete_sql = text(f"""
+                           DELETE FROM {table_name}
+                           WHERE id NOT IN (
+                               SELECT MIN(id)
+                               FROM {table_name}
+                               WHERE {email_field} != ''
+                               GROUP BY {email_field}
+                           )
+                           AND {email_field} != ''
+                       """)
+
+                result = conn.execute(delete_sql)
+                conn.commit()
+                print(f"✅ Удалено {result.rowcount} дубликатов")
+            else:
+                print("✅ Дубликатов не найдено")
+
+            # Показываем итоговую статистику
+            total = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
+            unique = conn.execute(text(f"SELECT COUNT(DISTINCT {email_field}) FROM {table_name}")).scalar()
+
+            print(f"📊 Итог: {total} записей, {unique} уникальных email")
+
+    def split_emails_and_replace(self, source_table='table_temp', email_field='mail'):
+        """
+        Разбивает записи с несколькими email на отдельные записи
+        и заменяет исходную таблицу на очищенную версию
+        """
+        temp_table = f"{source_table}_new"
+
+        with self.engine.connect() as conn:
+            # 1. Получаем структуру исходной таблицы
+            columns_info = conn.execute(text(f"PRAGMA table_info({source_table})")).fetchall()
+            columns = [col[1] for col in columns_info if col[1] != 'id']
+
+            # 2. Создаём временную таблицу с автоинкрементным ID
+            conn.execute(text(f"DROP TABLE IF EXISTS {temp_table}"))
+            create_sql = f"""
+                CREATE TABLE {temp_table} (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    {', '.join([f'{col} TEXT' for col in columns])}
                 )
-            """)
+            """
+            conn.execute(text(create_sql))
 
-            # Удаляем старую таблицу
-            sql_drop = text(f"DROP TABLE {table_name}")
-            #
-            # Переименовываем временную
-            sql_rename = text(f"ALTER TABLE {temp_table} RENAME TO {table_name}")
-
-            conn.execute(sql_create)
-            conn.execute(sql_drop)
-            conn.execute(sql_rename)
-            conn.commit()
-
-            print(f"✅ Таблица {table_name} очищена от дубликатов")
-
-    def find_emails_with_comma(self, table_name, mail_field='mail'):
-        """
-        Находит все записи, где в поле mail есть запятая
-        """
-        with self.engine.connect() as conn:
-            sql = text(f"""
-                SELECT * FROM {table_name} 
-                WHERE {mail_field} LIKE '%,%'
-            """)
-
-            results = conn.execute(sql).fetchall()
-
-            print(f"Найдено {len(results)} записей с запятой в поле {mail_field}")
-            return results
-
-    def split_emails_to_new_table(self, source_table, target_table, email_field='mail'):
-        """
-        Находим все записи где есть дреса mail через запятую
-        Разбиваем записи с несколькими email (через запятую) на отдельные записи
-        """
-        with self.engine.connect() as conn:
-            # Создаём новую таблицу
-            conn.execute(text(f"DROP TABLE IF EXISTS {target_table}"))
-            conn.execute(text(f"""
-                CREATE TABLE {target_table} AS 
-                SELECT * FROM {source_table} WHERE 1=0
-            """))
-
-            # Получаем все записи с запятыми
-            sql = text(f"SELECT * FROM {source_table} WHERE {email_field} LIKE '%,%'")
-            rows_with_comma = conn.execute(sql).fetchall()
+            # 3. Получаем все записи из источника
+            rows = conn.execute(text(f"SELECT * FROM {source_table}")).fetchall()
 
             inserted_count = 0
+            split_count = 0
 
-            for row in rows_with_comma:
-                # Разбиваем email по запятой
-                emails = str(getattr(row, email_field)).split(',')
+            for row in rows:
+                email_value = str(getattr(row, email_field))
 
-                for email in emails:
-                    email = email.strip()  # Убираем пробелы
-                    if email:  # Проверяем, что email не пустой
-                        # Создаём новую запись
-                        insert_sql = text(f"""
-                            INSERT INTO {target_table} 
-                            SELECT * FROM {source_table} 
-                            WHERE id = :id
-                        """)
-                        conn.execute(insert_sql, {"id": row.id})
+                # Проверяем наличие разделителей (запятая или пробел)
+                if ',' in email_value or ' ' in email_value:
+                    # Заменяем пробелы на запятые и разбиваем
+                    email_value = email_value.replace(' ', ',')
+                    emails = [e.strip() for e in email_value.split(',') if e.strip()]
+                    split_count += 1
 
-                        # Обновляем email в новой записи
-                        update_sql = text(f"""
-                            UPDATE {target_table} 
-                            SET {email_field} = :email 
-                            WHERE id = (SELECT MAX(id) FROM {target_table})
-                        """)
-                        conn.execute(update_sql, {"email": email})
+                    for email in emails:
+                        # Формируем данные для вставки
+                        insert_data = {}
+                        for col in columns:
+                            if col == email_field:
+                                insert_data[col] = email
+                            else:
+                                insert_data[col] = getattr(row, col)
 
+                        placeholders = ', '.join([f':{col}' for col in insert_data.keys()])
+                        columns_str = ', '.join(insert_data.keys())
+
+                        conn.execute(text(f"""
+                            INSERT INTO {temp_table} ({columns_str}) 
+                            VALUES ({placeholders})
+                        """), insert_data)
                         inserted_count += 1
                         print(f"✅ Добавлен email: {email}")
+                else:
+                    # Записи без разделителей просто копируем
+                    insert_data = {}
+                    for col in columns:
+                        insert_data[col] = getattr(row, col)
+
+                    placeholders = ', '.join([f':{col}' for col in insert_data.keys()])
+                    columns_str = ', '.join(insert_data.keys())
+
+                    conn.execute(text(f"""
+                        INSERT INTO {temp_table} ({columns_str}) 
+                        VALUES ({placeholders})
+                    """), insert_data)
+                    inserted_count += 1
 
             conn.commit()
-            print(f"\n📊 Итого: {inserted_count} новых записей создано")
+
+            # 4. Создаём бэкап исходной таблицы (опционально)
+            backup_table = f"{source_table}_backup"
+            conn.execute(text(f"DROP TABLE IF EXISTS {backup_table}"))
+            conn.execute(text(f"ALTER TABLE {source_table} RENAME TO {backup_table}"))
+            print(f"📦 Создан бэкап исходной таблицы: {backup_table}")
+
+            # 5. Переименовываем временную таблицу в исходную
+            conn.execute(text(f"ALTER TABLE {temp_table} RENAME TO {source_table}"))
+
+            # 6. Удаляем дубликаты в новой таблице (если остались)
+            conn.execute(text(f"""
+                DELETE FROM {source_table} 
+                WHERE id NOT IN (
+                    SELECT MIN(id) 
+                    FROM {source_table} 
+                    GROUP BY {email_field}
+                )
+            """))
+
+            conn.commit()
+
+            # 7. Статистика
+            final_count = conn.execute(text(f"SELECT COUNT(*) FROM {source_table}")).scalar()
+
+            print(f"\n📊 ИТОГО:")
+            print(f"   Обработано записей с разделителями: {split_count}")
+            print(f"   Создано новых записей: {inserted_count}")
+            print(f"   Итоговое количество в таблице {source_table}: {final_count}")
+
             return inserted_count
 
+    def del_blank_srt(self, table_name='table_temp', mail_field='mail'):
+        # удаляем пустые строки из таблицы
+        with self.engine.connect() as conn:
+            result = conn.execute(text(f"""
+                   DELETE FROM {table_name}
+                   WHERE {mail_field} = '' OR {mail_field} IS NULL
+               """))
+            conn.commit()
+
+            print(f"✅ Удалено {result.rowcount} записей с пустыми {mail_field}")
+            return result.rowcount
+
     def run(self):
-        # self.copy_table_for_work(2, 'Organisations')
+        self.copy_table_for_work(1, 'Organisations')
+        self.del_blank_srt()
+        self.split_emails_and_replace()
         self.remove_duplicates_in_tables()
+
+
 
 if __name__ == '__main__':
     db = DB()
     db.run()
-
-    # db.remove_duplicates_safe('Organisations_copy')
-    # db.find_emails_with_comma('Organisations_copy')
-    # db.split_emails_to_new_table('Organisations_copy', 'mail_organisations')
