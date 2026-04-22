@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from sqlalchemy import select, and_, or_, func, delete
 
 from sqlalchemy import create_engine, text
@@ -7,6 +8,11 @@ from parser.models import Base
 import logging
 from core.config import settings
 
+from pydantic import BaseModel, EmailStr
+
+class EmailValidator(BaseModel):
+    mail: EmailStr
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +21,8 @@ class DB:
     1. Копируем таблицу для работы copy_table_for_work
     2. Удаляем строки с пустыми полями del_blank_srt
     3. Удаляем записи дубликатов email remove_duplicates_in_tables
-
+    4. разбираем поле с несколькимиe mail в разные записи self.split_emails_and_replace()
+    5. Валилируем через Pydantic self.clean_and_validate_emails()
     '''
 
     def __init__(self):
@@ -203,11 +210,47 @@ class DB:
             print(f"✅ Удалено {result.rowcount} записей с пустыми {mail_field}")
             return result.rowcount
 
+
+
+    def clean_and_validate_emails(self, table_name='table_temp'):
+        """Очистка и валидация email в таблице"""
+        with self.engine.connect() as conn:
+
+            # Получаем все записи
+            rows = conn.execute(text(f"SELECT id, mail FROM {table_name}")).fetchall()
+
+            valid_count = 0
+            invalid_count = 0
+
+            for row in rows:
+                email = row.mail
+                if not email:
+                    continue
+
+                try:
+                    # Валидация email
+                    EmailValidator(mail=email)
+                    valid_count += 1
+                except:
+                    # Если email невалидный - помечаем или удаляем
+                    print(f"❌ Невалидный email: {email} (ID: {row.id})")
+                    conn.execute(text(f"DELETE FROM {table_name} WHERE id = {row.id}"))
+                    invalid_count += 1
+            conn.commit()
+
+            logger.info(f"\n✅ Валидных: {valid_count}")
+            logger.info(f"❌ Невалидных: {invalid_count}")
+            print(f"\n✅ Валидных: {valid_count}")
+            print(f"❌ Невалидных: {invalid_count}")
+
+
+
     def run(self):
         self.copy_table_for_work(1, 'Organisations')
         self.del_blank_srt()
         self.split_emails_and_replace()
         self.remove_duplicates_in_tables()
+        self.clean_and_validate_emails()
 
 
 
