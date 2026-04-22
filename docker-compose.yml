@@ -40,7 +40,7 @@ services:
       resources:
         limits:
           memory: 4G  # Увеличить лимит памяти
-          cpus: '2'
+#          cpus: '2'
         reservations:
           memory: 2G
     shm_size: 2gb  # Важно! Увеличить разделяемую память
