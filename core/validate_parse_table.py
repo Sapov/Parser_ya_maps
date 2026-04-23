@@ -13,16 +13,18 @@ class EmailValidator(BaseModel):
 logger = logging.getLogger(__name__)
 
 
-class DB:
+class ValidateDB:
     '''
     1. Копируем таблицу для работы copy_table_for_work
     2. Удаляем строки с пустыми полями del_blank_srt
     3. Удаляем записи дубликатов email remove_duplicates_in_tables
     4. разбираем поле с несколькимиe mail в разные записи self.split_emails_and_replace()
-    5. Валилируем через Pydantic self.clean_and_validate_emails()
+    5. Валидируем через Pydantic self.clean_and_validate_emails()
     '''
 
-    def __init__(self):
+    def __init__(self, category_id:int):
+        '''Указать номер категории в БД'''
+        self.category_id = category_id
         self.engine = create_engine(
             url=settings.db_url,
             echo=settings.db_echo,
@@ -32,9 +34,9 @@ class DB:
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
-    def copy_table_for_work(self, category_id: int, source_table_name, target_table_name='table_temp'):
+    def copy_table_for_work(self, category_id: int, source_table_name, target_table_name='validate_table'):
         """
-        Копируем таблицу для пробразований называем table_temp
+        Копируем таблицу для пробразований называем validate_table
         """
         with self.engine.connect() as conn:
             conn.execute(text(f"DROP TABLE IF EXISTS {target_table_name}"))
@@ -48,7 +50,7 @@ class DB:
             logger.info(f'Сделал копию таблицы {target_table_name} -> {source_table_name}')
             print(f'Сделал копию таблицы {target_table_name} -> {source_table_name}')
 
-    def remove_duplicates_in_tables(self, table_name='table_temp', email_field='mail'):
+    def remove_duplicates_in_tables(self, table_name='validate_table', email_field='mail'):
         """
         Удаляем записи дубликатов email
         """
@@ -91,7 +93,7 @@ class DB:
 
             print(f"📊 Итог: {total} записей, {unique} уникальных email")
 
-    def split_emails_and_replace(self, source_table='table_temp', email_field='mail'):
+    def split_emails_and_replace(self, source_table='validate_table', email_field='mail'):
         """
         Разбивает записи с несколькими email на отдельные записи
         и заменяет исходную таблицу на очищенную версию
@@ -195,7 +197,7 @@ class DB:
 
             return inserted_count
 
-    def del_blank_srt(self, table_name='table_temp', mail_field='mail'):
+    def del_blank_srt(self, table_name='validate_table', mail_field='mail'):
         # удаляем пустые строки из таблицы
         with self.engine.connect() as conn:
             result = conn.execute(text(f"""
@@ -209,7 +211,7 @@ class DB:
 
 
 
-    def clean_and_validate_emails(self, table_name='table_temp'):
+    def clean_and_validate_emails(self, table_name='validate_table'):
         """Очистка и валидация email в таблице"""
         with self.engine.connect() as conn:
 
@@ -243,7 +245,7 @@ class DB:
 
 
     def run(self):
-        self.copy_table_for_work(1, 'Organisations')
+        self.copy_table_for_work(self.category_id, 'Organisations')
         self.del_blank_srt()
         self.split_emails_and_replace()
         self.remove_duplicates_in_tables()
@@ -252,5 +254,5 @@ class DB:
 
 
 if __name__ == '__main__':
-    db = DB()
+    db = ValidateDB(1)
     db.run()
