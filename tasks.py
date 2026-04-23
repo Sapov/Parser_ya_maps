@@ -83,13 +83,12 @@ def async_example(self, url: str) -> Dict:
         loop.close()
 
 
-# Задача для парсинга (ваш случай)
 @celery_app.task(name="tasks.parse_category", bind=True)
 def parse_category(self, category: str, location: str, quantity: int = None) -> Dict:
     """
     Задача парсинга категории
     """
-    from parser.old_parser_card import ParserCard
+    from parser.new_parser_card import ParserCard
 
     logger.info(f"Начинаем парсинг {category} в {location}")
 
