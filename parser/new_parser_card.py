@@ -97,7 +97,7 @@ class ParserCard:
         options.add_argument('--disk-cache-dir=/tmp/cache')
 
         # Регистрируем очистку
-        atexit.register(self.cleanup)
+        atexit.register(self.close)
 
         # Дополнительные опции для стабильности
         # options.add_argument("--disable-features=VizDisplayCompositor")

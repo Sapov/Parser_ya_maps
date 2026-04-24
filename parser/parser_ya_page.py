@@ -1,5 +1,8 @@
 import asyncio
+import atexit
 import json
+import shutil
+import tempfile
 import time
 import random
 from typing import List, Dict, Optional, Any
@@ -164,6 +167,15 @@ class PageParser:
             options.add_argument("--password-store=basic")
             options.add_argument("--use-mock-keychain")
 
+            # Создаём свою временную папку
+            self.temp_dir = tempfile.mkdtemp()
+
+            options.add_argument(f'--user-data-dir={self.temp_dir}')
+            options.add_argument('--disk-cache-dir=/tmp/cache')
+
+            # Регистрируем очистку
+            atexit.register(self._close_driver)
+
             self.driver = uc.Chrome(
                 version_main=self.config.version_chrome,
                 options=options
@@ -189,6 +201,8 @@ class PageParser:
             finally:
                 self.driver = None
                 self.wait = None
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+
 
     def _get_random_delay(self) -> float:
         """Получение случайной задержки"""
