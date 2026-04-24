@@ -485,8 +485,8 @@ if __name__ == "__main__":
 
     # Запуск парсера
     parser = PageParser(
-        category='Агентство недвижимости',
-        location='Саратов'
+        category='Риэлторы',
+        location='Лобня'
     )
 
     try:

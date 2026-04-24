@@ -254,5 +254,5 @@ class ValidateDB:
 
 
 if __name__ == '__main__':
-    db = ValidateDB(1)
+    db = ValidateDB(4)
     db.run()
