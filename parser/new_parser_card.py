@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Dict, List
 from functools import lru_cache
-
+from core.clianing_tmp import clean_tmp
 from selenium.common import NoSuchElementException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -126,6 +126,8 @@ class ParserCard:
                 self.wait = None
                 # Удаляем временную папку
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
+                clean_tmp()
+
 
 
 

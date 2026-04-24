@@ -12,6 +12,7 @@ from pathlib import Path
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
+from core.clianing_tmp import clean_tmp
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
@@ -202,6 +203,7 @@ class PageParser:
                 self.driver = None
                 self.wait = None
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
+                clean_tmp()
 
 
     def _get_random_delay(self) -> float:

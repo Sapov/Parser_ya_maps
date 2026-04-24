@@ -1,5 +1,10 @@
-import shutil
+import subprocess
+def clean_tmp():
+    # subprocess.run(['rm', '-rf', './tmp'])
 
-def cleanup_chrome_temp():
-    shutil.rmtree('/tmp/.com.google.Chrome.*', ignore_errors=True)
-
+    # Вариант 3: с проверкой результата
+    result = subprocess.run(['rm', '-rf', './tmp'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("Успешно удалено")
+    else:
+        print(f"Ошибка: {result.stderr}")
