@@ -1,4 +1,7 @@
+import atexit
 import random
+import shutil
+import tempfile
 import time
 import re
 from dataclasses import dataclass
@@ -38,7 +41,7 @@ class ParserConfig:
 
 class ParserCard:
     """
-    Парсер карточек Я.Карт (с использованием пула драйверов)
+    Парсер карточек Я.Карт
     """
 
     # Константы для селекторов
@@ -54,6 +57,7 @@ class ParserCard:
     _NUMBERS_EXTRACTOR = re.compile(r'\d+')
 
     def __init__(self, category: str, location: str, quantity: int = None, config: ParserConfig = None):
+        self.temp_dir = None
         self.quantity = quantity
         self.location = location
         self.category = category
@@ -74,6 +78,10 @@ class ParserCard:
             """Контекстный менеджер для автоматического закрытия драйвера"""
 
     def setup_driver(self):
+
+
+
+
         options = uc.ChromeOptions()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
@@ -82,10 +90,19 @@ class ParserCard:
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
 
+        # Создаём свою временную папку
+        self.temp_dir = tempfile.mkdtemp()
+
+        options.add_argument(f'--user-data-dir={self.temp_dir}')
+        options.add_argument('--disk-cache-dir=/tmp/cache')
+
+        # Регистрируем очистку
+        atexit.register(self.cleanup)
+
         # Дополнительные опции для стабильности
-        options.add_argument("--disable-features=VizDisplayCompositor")
-        options.add_argument("--disable-logging")
-        options.add_argument("--log-level=3")
+        # options.add_argument("--disable-features=VizDisplayCompositor")
+        # options.add_argument("--disable-logging")
+        # options.add_argument("--log-level=3")
 
         self.driver = uc.Chrome(
             version_main=self.config.version_chrome,
@@ -98,11 +115,19 @@ class ParserCard:
     def close(self):
         """Закрытие драйвера"""
         if self.driver:
-            self.driver.quit()
             try:
                 self.driver.quit()
+                logger.info("Драйвер закрыт")
+
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии драйвера: {e}")
+            finally:
+                self.driver = None
+                self.wait = None
+                # Удаляем временную папку
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+
 
     @lru_cache(maxsize=128)
     def _get_full_url(self) -> str:
@@ -304,17 +329,13 @@ class ParserCard:
             logger.info(f"✅ Обработано и сохранено: {processed_count}")
             logger.info(f"⚡ Скорость: {processed_count / elapsed_time:.2f} элементов/сек")
             logger.info(f"{'=' * 60}\n")
-
+            self.close()
             return processed_count
 
         except Exception as e:
             logger.error(f"Критическая ошибка при парсинге: {e}", exc_info=True)
             raise
 
-    def run(self) -> int:
-        """Запуск парсинга (упрощенный интерфейс)"""
-        with self:
-            return self.parse()
 
 
 # ============== ФУНКЦИЯ ЗАПУСКА ==============
