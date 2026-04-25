@@ -1,5 +1,5 @@
 from sqlalchemy import select, and_, or_, func
-
+from parser.parser_city_in_wiki import LoadAllCity
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
@@ -24,6 +24,7 @@ class DB:
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
+        LoadAllCity().run()
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
