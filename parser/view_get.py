@@ -1,13 +1,10 @@
-from fastapi import APIRouter
-
-router = APIRouter(prefix='/data', tags=['data'])
-
 import csv
 import re
 from fastapi import APIRouter, Depends, Query, HTTPException
 from datetime import datetime
-
 from core.db import DB
+
+router = APIRouter(prefix='/data', tags=['data'])
 
 
 

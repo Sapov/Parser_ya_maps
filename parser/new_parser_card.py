@@ -78,10 +78,6 @@ class ParserCard:
             """Контекстный менеджер для автоматического закрытия драйвера"""
 
     def setup_driver(self):
-
-
-
-
         options = uc.ChromeOptions()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
