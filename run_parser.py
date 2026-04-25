@@ -152,7 +152,6 @@ def run_parser(category: str, city: str, quantity: int):
     runing_parser(category, city, quantity)
     return 'wait'
 
-
 def parse_all_city(category: str):
     for town in CITY:
         try:
