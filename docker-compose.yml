@@ -29,6 +29,7 @@ services:
       - .:/app
     depends_on:
       - redis
+      - postgres
     command: 'celery -A celery_app worker --loglevel=info --concurrency=1'
 
     environment:
@@ -48,16 +49,13 @@ services:
   postgres:
     image: postgres:15
     restart: always
-    container_name: postgres
+    container_name: postgres_db
     expose:
       - "5432"
     volumes:
       - postgres_data:/pg
     env_file:
       - .env
-
-
-
 
 
 volumes:

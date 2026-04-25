@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import time
 import re
+import traceback
 from dataclasses import dataclass
 from typing import Optional, Dict, List
 from functools import lru_cache
@@ -19,6 +20,7 @@ from selenium.webdriver.common.by import By
 
 import logging
 
+from parser.models import Category, City, Organisations
 from parser.parser_ya_page import PageParser
 
 logger = logging.getLogger(__name__)
@@ -235,16 +237,71 @@ class ParserCard:
         return len(parsed_items)
 
     def _save_items_batch(self, items: List[Dict]):
-        """Массовое сохранение элементов в БД"""
+        """Массовое сохранение - БЕЗ РЕКУРСИИ"""
+        if not items:
+            return
+
+        session = None
         try:
-            if hasattr(self.db, 'add_items_batch'):
-                self.db.add_items_batch(items)
-            else:
-                for item in items:
-                    self.db.add_items_link(item)
-            logger.info(f"Сохранено {len(items)} элементов в БД")
+            session = self.db.Session()
+
+            for item in items:
+                try:
+                    # Работаем напрямую с сессией, без промежуточных методов
+                    category = session.query(Category).filter_by(category=item.get("category")).first()
+                    if not category:
+                        category = Category(category=item.get("category"))
+                        session.add(category)
+                        session.flush()
+
+                    city = session.query(City).filter_by(city=item.get("city")).first()
+                    if not city:
+                        city = City(city=item.get("city"))
+                        session.add(city)
+                        session.flush()
+
+                    existing = session.query(Organisations).filter_by(link=item.get("link")).first()
+
+                    if existing:
+                        # Обновляем через ID
+                        existing.title = item.get("title")
+                        existing.rating_yandex = item.get("rating_yandex")
+                        existing.estimation = item.get("estimation")
+                        existing.category_id = category.id
+                        existing.city_id = city.id
+                    else:
+                        # Создаем через ID
+                        org = Organisations(
+                            link=item.get("link"),
+                            title=item.get("title"),
+                            rating_yandex=item.get("rating_yandex"),
+                            estimation=item.get("estimation"),
+                            category_id=category.id,
+                            city_id=city.id,
+                        )
+                        session.add(org)
+
+                except Exception as e:
+                    print(f"Ошибка в элементе {item.get('link')}: {e}")
+                    continue
+
+            session.commit()
+            print(f"Сохранено {len(items)} элементов")
+
+        except RecursionError as e:
+            if session:
+                session.rollback()
+            print(f"❌ Рекурсия в batch: {e}")
+            print(f"Стек: {traceback.format_exc()}")
+            raise
         except Exception as e:
-            logger.error(f"Ошибка сохранения в БД: {e}")
+            if session:
+                session.rollback()
+            print(f"❌ Ошибка: {e}")
+            raise
+        finally:
+            if session:
+                session.close()
 
     def _scroll_and_collect(self) -> List[WebElement]:
         """Прокрутка страницы и сбор элементов"""

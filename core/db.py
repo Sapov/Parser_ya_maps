@@ -1,3 +1,5 @@
+import traceback
+
 from sqlalchemy import select, and_, or_, func
 from parser import parser_city_in_wiki
 from sqlalchemy import create_engine, select
@@ -23,7 +25,6 @@ class DB:
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
-        parser_city_in_wiki.LoadAllCity().run()
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
@@ -90,6 +91,10 @@ class DB:
             session.rollback()
             logger.error(f"Ошибка при добавлении/обновлении: {e}")
             raise  # Переподнимаем исключение для диагностики
+        except RecursionError:
+            print("=== RECURSION ERROR DETECTED ===")
+            traceback.print_stack()
+            raise
         finally:
             session.close()
 
@@ -403,9 +408,3 @@ class DB:
             return duplicates
 
 
-
-
-# Проверка работы
-if __name__ == "__main__":
-    db = DB()
-    print(db.find_duplicates())
