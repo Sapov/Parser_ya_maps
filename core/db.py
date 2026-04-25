@@ -15,7 +15,6 @@ from core.config import settings
 
 logger = logging.getLogger(__name__)
 
-
 class DB:
     def __init__(self):
         self.engine = create_engine(
