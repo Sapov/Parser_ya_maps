@@ -45,19 +45,22 @@ services:
           memory: 2G
     shm_size: 2gb  # Важно! Увеличить разделяемую память
 
-#  postgres:
-#    image: postgres:15
-#    restart: always
-#    container_name: postgres
-#    expose:
-#      - "5432"
-#    volumes:
-#      - postgres_data:/pg
+  postgres:
+    image: postgres:15
+    restart: always
+    container_name: postgres
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/pg
+    env_file:
+      - .env
+
 
 
 
 
 volumes:
   redis_data:
-#  postgres_data:
-#    name: postgres_data
+  postgres_data:
+    name: postgres_data
