@@ -1,4 +1,4 @@
-# db/services/organisation_service.py
+from sqlalchemy import select
 from typing import List, Dict, Optional
 from contextlib import contextmanager
 from db.session_manager import SessionManager
@@ -6,6 +6,8 @@ from db.repositories.organisation_repo import OrganisationRepository
 from db.repositories.city_repo import CityRepository
 from db.repositories.category_repo import CategoryRepository
 import logging
+
+from parser.models import Organisations
 
 logger = logging.getLogger(__name__)
 
@@ -140,3 +142,31 @@ class OrganisationService:
                 "with_email": len(orgs_with_email),
                 "percentage": (len(orgs_with_email) / len(orgs) * 100) if orgs else 0
             }
+
+
+
+    async def insert_data(self, item: dict) -> None:
+        """Асинхронная вставка или обновление данных организации"""
+        async with self.session_manager.AsyncSession() as session:
+            try:
+                # Поиск существующей организации
+                result = await session.execute(
+                    select(Organisations).where(Organisations.id == item.get("id"))
+                )
+                entry = result.scalar_one_or_none()
+
+                if entry:
+                    # Обновление существующей записи
+                    entry.mail = item.get("mail")
+                    entry.whatsapp = item.get("whatsapp")
+                    entry.telegram = item.get("telegram")
+                    logger.info(f"Обновлена организация с ID: {entry.id}")
+                else:
+                    logger.warning(f"Организация с ID {item.get('id')} не найдена")
+
+                await session.commit()
+
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Ошибка при вставке данных: {e}")
+                raise

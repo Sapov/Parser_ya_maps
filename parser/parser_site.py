@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import time
 
@@ -8,6 +9,7 @@ from bs4 import BeautifulSoup as bs
 
 from core.adb import AsyncDB
 from core.db import DB
+from db.database import Database
 
 
 class ParseSite:
@@ -24,11 +26,12 @@ class ParseSite:
                         if result.status == 200:
                             page = await result.text()
                             print(f"---- Обработка страницы: {url} ----")
+                            logging.info(f'---- Обработка страницы: {url} ----')
                             item["mail"] = self.search_mail(page)
                             item["whatsapp"] = self.search_wa_me(page)
                             item["telegram"] = self.search_telega(page)
-                            itm = AsyncDB()
-                            await itm.insert_data(item)
+                            db = Database()
+                            await db.organisations.insert_data(item)
                         return item
                     except Exception as e:
                         print(f'Нет данных" {e}')

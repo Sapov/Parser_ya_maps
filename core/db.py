@@ -28,23 +28,6 @@ class DB:
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
 
-    async def insert_data(self, item: dict):
-        async with self.async_session() as session:
-            result = await session.execute(
-                select(Organisations).where(Organisations.id == item.get("id"))
-            )
-            entry = result.scalar_one_or_none()
-
-            if entry:
-                entry.mail = item.get("mail")
-                entry.whatsapp = item.get("whatsapp")
-                entry.telegram = item.get("telegram")
-                logger.info(f"Обновлена организация с ID: {entry.id}")
-
-                await session.commit()
-            else:
-                logger.warning(f"Организация с ID {item.get('id')} не найдена")
-
     def add_items_link(self, items_link: dict) -> None:
         session = self.Session()
         try:

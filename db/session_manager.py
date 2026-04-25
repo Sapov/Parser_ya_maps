@@ -31,3 +31,4 @@ class SessionManager:
     def create_table(self):
         Base.metadata.create_all(self.sync_engine)
 
+
