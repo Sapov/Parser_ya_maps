@@ -1,0 +1,1 @@
+from . import parser_city_in_wiki

@@ -1,11 +1,11 @@
 from sqlalchemy import select, and_, or_, func
-from parser.parser_city_in_wiki import LoadAllCity
+from parser import parser_city_in_wiki
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from parser.models import Base
 from parser.models.city_all import CityAll
-# from parser.models.city_all import CityAll
+
 from parser.models.organisations import Organisations
 from parser.models.city import City
 from parser.models.category import Category
@@ -23,7 +23,7 @@ class DB:
         )
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         Base.metadata.create_all(self.engine)
-        LoadAllCity().run()
+        parser_city_in_wiki.LoadAllCity().run()
         async_engine = create_async_engine(settings.async_bd_url)
         self.async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
