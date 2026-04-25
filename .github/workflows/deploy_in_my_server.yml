@@ -1,7 +1,12 @@
 name: Deploy_in_my_server
 
+#on:
+ # workflow_dispatch
 on:
-  workflow_dispatch
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 env:
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
