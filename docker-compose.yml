@@ -1,3 +1,68 @@
+#services:
+#  redis:
+#    image: redis:alpine
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+#
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      - REDIS_URL=redis://redis:6379/0
+#      - CELERY_BROKER_URL=redis://redis:6379/0
+#      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+#
+#  celery_worker:
+#    restart: always
+#    build: .
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#      - postgres
+#    command: 'celery -A celery_app worker --loglevel=info --concurrency=1'
+#
+#    environment:
+#      - REDIS_URL=redis://redis:6379/0
+#      - CELERY_BROKER_URL=redis://redis:6379/0
+#      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+#
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 4G  # Увеличить лимит памяти
+##          cpus: '2'
+#        reservations:
+#          memory: 2G
+#    shm_size: 2gb  # Важно! Увеличить разделяемую память
+#
+#  postgres:
+#    image: postgres:15
+#    restart: always
+#    container_name: postgres_db
+#    expose:
+#      - "5432"
+#    volumes:
+#      - postgres_data:/pg
+#    env_file:
+#      - .env
+#
+#
+#volumes:
+#  redis_data:
+#  postgres_data:
+#    name: postgres_data
+
 services:
   redis:
     image: redis:alpine
@@ -5,6 +70,32 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+    healthcheck: # Добавлено для проверки готовности
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app_network  # Добавлен
+
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: postgres_db
+    ports: # ИСПРАВЛЕНО: expose -> ports (чтобы был доступ с хоста)
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # ИСПРАВЛЕНО: /pg -> стандартный путь
+    env_file:
+      - .env
+    healthcheck: # Добавлено для проверки готовности
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app_network  # Добавлен
 
   app:
     build:
@@ -16,49 +107,62 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DB_HOST=postgres  # Добавлено для подключения к БД
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DB_NAME=${POSTGRES_DB:-parser_db}
     volumes:
       - .:/app
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy  # Исправлено: ждем готовности
+      postgres:
+        condition: service_healthy  # Исправлено: ждем готовности
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    networks:
+      - app_network  # Добавлен
 
   celery_worker:
-    restart: always
-    build: .
+    restart: unless-stopped  # Исправлено: always -> unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .:/app
     depends_on:
-      - redis
-      - postgres
-    command: 'celery -A celery_app worker --loglevel=info --concurrency=1'
-
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command: celery -A celery_app worker --loglevel=info --concurrency=1
     environment:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DB_NAME=${POSTGRES_DB:-parser_db}
     deploy:
       resources:
         limits:
-          memory: 4G  # Увеличить лимит памяти
-#          cpus: '2'
+          memory: 4G
         reservations:
           memory: 2G
-    shm_size: 2gb  # Важно! Увеличить разделяемую память
-
-  postgres:
-    image: postgres:15
-    restart: always
-    container_name: postgres_db
-    expose:
-      - "5432"
-    volumes:
-      - postgres_data:/pg
-    env_file:
-      - .env
-
+    shm_size: 2gb
+    # Добавлено для очистки tmp
+    tmpfs:
+      - /tmp:size=1G,noexec,nosuid
+    networks:
+      - app_network  # Добавлен
 
 volumes:
   redis_data:
   postgres_data:
-    name: postgres_data
+    name: postgres_data  # Это нормально, но можно упростить
+networks:
+  app_network:
+    driver: bridge  # Объявление сети
